@@ -1,0 +1,142 @@
+\documentclass{aa}
+\usepackage[varg]{txfonts}
+\usepackage{color}
+\usepackage{graphicx}
+\usepackage{subfig}    %% For generating a grid of figures.
+%% \newsavebox\mybox   %% For generating figure captions which wrap at figure 
+%% edges.
+%% \newlength\myboxlen
+%% \newcommand{\figcap}[2]
+%% {%
+%%   \sbox\mybox{#1}
+%%   \settowidth{\myboxlen}{\usebox{\mybox}}
+%%   \centering
+%%   \usebox\mybox
+%%   \hskip \textwidth
+%%   \parbox{\myboxlen}{#2}
+%% }
+
+\usepackage{bm}
+\bibpunct{(}{)}{;}{a}{}{,} % to follow the A&A style
+\begin{document}
+
+\title{Design and Commissioning of the AARTFAAC all-sky monitor}
+
+\author{Peeyush Prasad  \inst{1,2} \and Folkert Huizinga \inst{1} \and John Romein \inst{2}
+\and Daniel van der Schuur \inst{2} \and Ralph  Wijers  \inst{1}}
+ \institute{Universiteit  van
+  Amsterdam \and ASTRON, The Netherlands Foundation for Radio Astronomy}
+
+\date{Received <date> / Accepted <date>}
+
+%% Structured abstract
+\abstract{The  Amsterdam-ASTRON Radio  Transients Facility  And Analysis  Center
+  (AARTFAAC)  array is  a  sensitive,  all-sky radio  imager  based  on the  Low
+  Frequency Array  (LOFAR). It will  provide images  in near real-time  with sub
+  arcmin resolutions at low radio frequencies, which will be monitored for short
+  and bright radio transients. On detection of a transient, low latency triggers
+  will be generated for LOFAR, which can carry out follow-up observations.
+  In this paper, we describe the  implementation of the instrumentation, and its
+  capabilities.}
+
+  \keywords{Radio Interferometry - Imaging - Radio Transients - Correlators}
+
+\maketitle
+
+\section{\label{sec:Introduction}Introduction}
+The AARTFAAC radio  transient monitor is a  leading effort among a  group of new
+radio  telescopes with  similar functionalities  as the  wide field  monitors at
+higher  energies.  They are  characterized  by  having moderate  resolution  and
+sensitivity as compared  to contemporary telescopes, with  extremely wide fields
+of view (typically all sky),  high availabilities and autonomous calibration and
+imaging.  The  latter requirements  make their implementations  challenging. The
+antenna elements used to achieve the  wide fields of view are typically dipoles,
+however,  their low  individual  sensitivities requires  an  order of  magnitude
+larger number of  elements in the array. Bringing the  resulting large number of
+data streams to  a central location, as  well as their correlation  thus poses a
+significant  I/O  and  compute  challenge.   The wide  fields  of  view  at  the
+sensitivities of  operation also  result in direction  dependent effects  on the
+incoming  signals, mostly  due  to the  ionosphere. These  pose  a challenge  to
+calibration, especially when carried out in an autonomous manner.
+
+In this  paper, we describe  the implementation  of the instrumentation  for the
+AARTFAAC  array,  and the  commissioning  of  its various  subsystems.   Section
+\ref{sec:aartfaac_array} describes the array and the receiving antenna elements,
+its  relationship  with LOFAR,  and  introduces  the  full architecture  of  the
+instrument.    Section   \ref{sec:station_hardware}   describes   the   hardware
+implementation in  the field which  allows creating a  data path in  parallel to
+LOFAR. This  makes AARTFAAC processing independent  of LOFAR to a  large extent.
+In Section \ref{sec:gpucorr}, we describe the implementation of a real-time, GPU
+based  correlator  for  AARTFAAC,  while  Section  \ref{sec:calim}  details  the
+real-time,   autonomous  calibration   and   imaging  implementation.    Section
+\ref{sec:acontrol} describes our  control system for the  full instrument, which
+also interfaces with LOFAR.  In Section \ref{sec:results} we present performance
+metrics of the instrument as a whole.
+
+\section {\label{sec:aartfaac_array}The AARTFAAC array}
+\begin {itemize}
+ \item {Requirements for transient detection}
+ \item {Station description, Analog bandwidth, antenna field of view}
+ \item {RSP signal processing, available bit modes}
+ \item {AARTFAAC-12 array configuration}
+ \item {Effect of regular lofar observations on AARTFAAC, fraction of time spent
+   by LOFAR in HBA, LBA\_OUTER, LBA\_INNER mode}
+ \item {AARTFAAC system specs.}
+\end {itemize}
+
+\section {\label{sec:station_hardware} Station level hardware for piggy-back operation}
+\begin {itemize}
+ \item {URI board  description, data coupling scheme,  constraints on achievable
+   bandwidth}
+ \item  {The uniboard  data  reformatting (transpose),  uniboard data  transfer,
+   output data format}
+ \item {Available diagnostics, performance, commissioning tests}
+\end{itemize}
+
+\section {\label{sec:gpucorr} The AARTFAAC real-time correlator}
+\begin {itemize}
+ \item {Correlation for transit mode observations: logical blocks.}
+ \item {Description of processing flow.} 
+ \item {Motivation of chosen architecture for implementation.}
+ \item {Supported time and frequency binning, motivation of choice.}
+ \item {Required compute and memory bandwidth.}
+ \item {Synchronization of incoming data (input buffer), output data format.}
+ \item {Commissioning tests, performance.}
+\end {itemize}
+
+\section {\label{sec:calim} Real-time calibration and imaging}
+\begin {itemize}
+ \item {Architecture, implementation choices, performance}
+ \item {Unit test architecture}
+ \item {Interface to TraP}
+\end {itemize}
+
+\section {\label{sec:acontrol} The AARTFAAC control interface}
+\begin {itemize}
+ \item {Control system description}
+ \item {Interface with LOFAR}
+ \item {Monitoring interface: AARTFAAC webpage}
+\end {itemize}
+
+\section {\label{sec:results} Results}
+\begin {itemize}
+ \item {Long term performance of the entire system based on logs.}
+ \item {Performance  in various  bit-modes, with  different number  of subbands,
+   expected sensitivity}
+\end {itemize}
+
+\section {\label{sec:discussion} Discussion}
+
+\section {\label{sec:conclusion} Conclusions}
+
+\begin {acknowledgements}
+
+This work  was funded  by the ERC  grant <num> awarded  to Prof.   Ralph Wijers,
+Universitiet  Van Amsterdam.   We  thank The  Netherlands  Foundation for  Radio
+Astronomy  (ASTRON)  for support  provided  in  carrying out  the  commissioning
+observations.
+\end{acknowledgements}
+\bibliographystyle{aa}
+\bibliography{ref}
+
+\end{document}
