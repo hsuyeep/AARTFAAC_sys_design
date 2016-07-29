@@ -170,7 +170,7 @@ piggy-back  instrument like  the  AARTFAAC possible.  An  important resource  to
 optimize is the development time for  each data routing or processing block, and
 this has been taken into consideration in the AARTFAAC.
 
-
+\item Paper description \\
 In  this paper,  we describe  the  AARTFAAC telescope  system architecture,  its
 instrumentation,  and  the commissioning  of  its  various subsystems.   Section
 \ref{sec:aartfaac_array} describes the array and the receiving antenna elements,
@@ -453,55 +453,100 @@ level of the incoming data transposition.
 \label{fig:afaac_station_hw}
 \end{figure*}
 
+\begin {itemize}
+\item What does the correlator do\\
 The correlator  subsystem estimates the  spatial coherence between all  pairs of
 the 1156  polarizations of the  drooped dipoles, per  subband.  This is  done by
 computing  the  average  cross  correlation  between  antenna  polarization  per
 subband. Its  input is formed of  the subbanded complex voltage  timeseries from
 each  polarization  of every  antenna.   The  output  consists  of a  stream  of
-visibilities with a chosen time and  frequency averaging. It has requirements on
-matching the data throughput of  the incoming stations, while minimizing latency
-of computation of the coherence.
+visibilities with a chosen time and  frequency averaging.
 
-The correlator has been implemented using  a GPGPU approach, with a server class
-machine utilizing  a GPU device for  carrying out the computation  necessary for
-the correlation.  The host CPU based  machines acts as the interface between the
-stations and the  GPU devices. They implement the data  reception, and arbitrate
-the data distribution between different GPUs. They also carry out the last stage
-of the swizzle  operation to optmize the data layout  for computing the spectral
-coherence on  a GPU.  This  arranges the subbands from  all dipoles for  a given
-timeslice contiguously in memory. TODO: Tile related data reorganization here?\\
+\item The correlator  requirements for AARTFAAC \\ 
+The AARTFAAC  correlator must estimate  the correlation from 1152  input streams
+with as  little latency as possible.  It thus needs  to ingest a very  high data
+rate.  Further,  it  should  be  able  to  produce  channelized  output  due  to
+requirements of RFI  flagging, while being configurable in  its time integration
+capabilities.  A major requirement of the implementation was that of development
+time, which effectively eliminated a firmware based approach.
 
-\textbf {Parallization axis:} Parallelization  is fundamentally on the frequency
-axis, with  each subband being  processed independently. Within a  subband, each
-station  data is  processed independently  till the  correlation stage,  where a
-synchronization barrier  is applied to time  align all the dipole  streams. Each
-channel of the subband correlation matrix  is also processed independently via a
-GPU thread  group. Further, a  single channel  covariance matrix is  broken into
-cells, which are also computed independently.
+\item Motivating the GPGPU approach\\
+Of the available approaches, an heterogenous GPGPU approach turned out to be the
+best match between our requirements of  ease of development and performance. The
+correlation operation  has a  low Arithmetic Intensity,  implying that  the data
+brought to a device ALU is operated on only a few times. This, combined with the
+relatively restricted I/O bandwidth between the host CPU and the device GPU, has
+been used as  an argument against using GPGPU systems  for correlation. However,
+with increasing number  of signal sources, the I/O  requirements scale linearly,
+while the compute  requirements scale quadratically. Thus, a  large enough input
+system can make the application compute bound. This is the case withthe AARTFAAC
+system. Assuming the input subbands from the 1152 dipole elements would be split
+into 64 channels, with a one second time integration, the total required compute
+power required is ~17 TFLOP/sec. The latest GPUs come close to this requirement.
 
-\subsection  {Implementation  Hardware  architecture:} The  AARTFAAC  implementation
-consists of an AMD Tahiti GPU (Radeon  HD7970) installed on a 48-core Xeon class
-server machine.   To receive the ~60Gbps  data output from the  12 stations, the
-correlator host  is equipped with  2x40Gbps infiniband  interfaces.  A set  of 6
-stations connects  onto a  single 40Gbps interface.   The ~5Gbps  single station
-bandwidth is aggregated into  a switch with a 40Gbps output  port, which in turn
-connects to the correlator machine.\\
+\item Functional blocks \\
+The signal processing blocks necessary to achieve the correlator specs are shown
+in Fig. TODO.  After the incoming subbanded data from each station is aligned, a
+Polyphase filter bank is implemented  in order to increase frequency resolution.
+The resulting channels are then delay  compensated for the fixed cable delays in
+the system, as  well as for the  bandpass response of the  first stage Polyphase
+filter  bank.  Following  this, signals  from corresponding  timeslices for  all
+stations are correlated. The generated covariance matrix is then written out for
+further processing.
+\end {itemize}
 
-The server has  a NUMA architecture (TODO: Check?) which  allows the creation of
-two NUMA domains with an allocation of 24 cores and about 32GB of memory to each
-of  the  domains.  12-Station  correlation  requires  the  transmission  of  the
-appropriate set of  station data to each  NUMA domain, in order  to collate data
-for all 12 stations. This is carried  out over the NUMA bridge, which implements
-a Quick Path Interface (QPI).
+\subsection  {Implementation  Hardware  architecture:} 
+The AARTFAAC  correlator has  been implemented  using a  GPGPU approach,  with a
+server class  machine utilizing a  GPU device  for carrying out  the computation
+necessary  for  the correlation.   The  host  CPU  based  machines acts  as  the
+interface between  the stations  and the  GPU devices.  They implement  the data
+reception, and arbitrate the data distribution between different GPUs. They also
+carry out the last stage of the swizzle operation to optmize the data layout for
+computing the spectral coherence on a GPU.
 
- 
-\subsection {Implementation  functional  architecture:}   A  flow  diagram  of  the
-functional blocks of the  correlator is shown in Fig. TODO.   The raw data input
-from the individual stations is first  collated into the server host memory. The
-complex  voltage timeseries  is  aligned  betwen the  stations,  based on  their
-timestamps, and missing data slots are  accounted. The data buffer consists of a
-large number  of integration units  (TODO: Is this  true?I think a  command line
-parameter  allows specifying  this, but  then how  is latency  maintained?)  The
+The  implementation  consists  of  two identical  machine  configurations,  each
+capable of handling 16 incoming subbands from 12 stations. Each machine consists
+of dual Xeon-class processors  with 24 cores each. The CPUs  are connected to 32
+GB of memory each. Five AMD FirePro  S10000 GPU cards are available per machine,
+interfaced to the CPUs over 8x16bit  PCIe lanes (TODO: Verify correctness).  The
+memory is  organised in  a NUMA configuration,  with a  QuickPathInterface (QPI)
+connection between the two CPUs. To receive  the ~5Gbps data output from each of
+the 12  stations, the  server is equipped  with 2x40Gbps  infiniband interfaces,
+each collecting  the ~30Gbps data  from 6  stations.  The ~5Gbps  single station
+bandwidth is aggregated by a switch with  dual 40Gbps output port, which in turn
+connects to an induvidual correlator server.\\
+
+\textbf  {NUMA domains:}  In order  to  optimize throughput,  a single  machines
+resources are  organized into two  NUMA domains. Each  domain includes a  set of
+processing  cores, the  memory associated  with  them. The  hardware splits  the
+network I/O such that a single infiniband card can be present in each of the two
+NUMA domains. However, the split of the 5 GPU cards cannot be made symmetrically
+between the two domains, leaving one domain  with 3 GPUs, while the other domain
+as 2 GPUs.
+
+\subsection {Implementation of functional  blocks:} 
+
+In this  section, we provide a  description of the implementation  of individual
+functional blocks on our target hardware.
+
+\textbf {CPU  Data alignment  and transpose:}  
+
+The raw data input  packets from individual stations need to  be collated for an
+entire  integration period  in  host memory,  before  we can  ship  data to  the
+correlator. We allocate 4 processor cores for the execution of a thread pool for
+I/O handling. Each  thread handles the data reception from  one station. A large
+buffer for  the incoming  dat is also  setup. Each of  these I/O  thread manages
+reception of data from the network, and record data into the large buffer. While
+the  copy of  contiguous  smilim work  on it  during  ayourwhileFinally, we  pay
+thilarge buffer space, correcting. The incoming UDP packets are organized in the
+{Station,  Time,  Subband} order,  whilte  it  is  more  efficient to  rate  the
+visibilities The visibilities.order.
+
+
+
+ The data buffer consists
+of a  large number of  integration units (TODO: Is  this true?I think  a command
+line parameter allows specifying this, but then how is latency maintained?)  The
 assembled data buffer is asynchronously transferred to the GPU device memory for
 further  processing.(TODO: When  is the  last stage  swizzle carried  out? while
 transferring to  device memory,  or while  writing the  received data  into host
@@ -554,9 +599,15 @@ access to the same memory address?) can be addressed by scheduling data transfer
 asynchronously, while overlapping  the computation of the kernels  with the data
 transfer.
 
-\begin {itemize}
-  \item 
-\end {itemize}
+
+\textbf {Parallization axis:} Parallelization  is fundamentally on the frequency
+axis, with  each subband being  processed independently. Within a  subband, each
+station  data is  processed independently  till the  correlation stage,  where a
+synchronization barrier  is applied to time  align all the dipole  streams. Each
+channel of the subband correlation matrix  is also processed independently via a
+GPU thread  group. Further, a  single channel  covariance matrix is  broken into
+cells, which are also computed independently.
+
 - Enormous I/O  requirements. Is a  streaming, real-time application  with large
 - I/O  requirements. This  can  be a  problem for  implementation  in many  core
 - hardware.   
