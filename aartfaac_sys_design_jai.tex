@@ -19,7 +19,7 @@
 
 \title{The AARTFAAC Radio Sky Monitor: System Design and Implementation}
 
-\author{Peeyush Prasad$^\dagger$, Folkert Huizinga$^\dagger$, Eric Kooistra$^\ddagger$, Daniel van der Schuur $^\ddagger$, Andre Gunst $^\ddagger$ and R.A.M.J. Wijers$^\dagger$}
+\author{Peeyush Prasad$^\dagger$, Folkert Huizinga$^\dagger$, Eric Kooistra$^\ddagger$, Daniel van der Schuur $^\ddagger$, Andre Gunst $^\ddagger$, John Romein $^\ddagger$ and R.A.M.J. Wijers$^\dagger$}
 
 \address{
 $^\dagger$Anton Pannekoek Institute, Universitiet van Amsterdam, Amsterdam, The Netherlands, fauthor@university.com\\
@@ -56,11 +56,11 @@ implementation of the instrumentation, and its capabilities
 
 \begin{itemize}
 \item What are celestial transients \\
-\noindent Transient astronomy deals  with the detection and  characterization of celestial
-transients, sources in  the sky whose detectable properties can  change on short
-timescales.   These  explosive   events  provide  insight  into   a  variety  of
+\noindent Transient astronomy  deals with the detection  and characterization of
+celestial transients, sources in the  sky whose detectable properties can change
+on short timescales.   These explosive events provide insight into  a variety of
 astrophysics,  ranging from  emission mechanisms  of jets  to properties  of the
-intervening  medium [ref].  There is  a rich  history of  the detection  of such
+intervening medium  [ref].  There  is a  rich history of  the detection  of such
 objects  across  wavelength  ranges,  with  each  wavelength  regime  probing  a
 different parameter space [ref].
 
@@ -439,21 +439,20 @@ level of the incoming data transposition.
 \end{figure*}
 
 \begin {itemize}
-\item What does the correlator do\\
+\item  What does  the correlator  do\\  
 The correlator  subsystem estimates the  spatial coherence between all  pairs of
-the 1156  polarizations of the  drooped dipoles, per  subband.  This is  done by
-computing  the  average  cross  correlation  between  antenna  polarization  per
-subband. Its  input is formed of  the subbanded complex voltage  timeseries from
-each  polarization  of every  antenna.   The  output  consists  of a  stream  of
-visibilities with a chosen time and  frequency averaging.
+the 1152 polarizations  of the drooped dipoles, per frequency  channel.  This is
+the  most computationally  intensive subsystem  of the  pipeline.  Its  input is
+formed of  the subbanded  complex voltage timeseries  from each  polarization of
+every antenna.  The  output consists of a timeseries of  dipole array covariance
+matrices with a chosen time and frequency averaging.
 
-\item The correlator  requirements for AARTFAAC \\ 
-The AARTFAAC  correlator must estimate  the correlation from 1152  input streams
-with as  little latency as possible.  It thus needs  to ingest a very  high data
-rate.  Further,  it  should  be  able  to  produce  channelized  output  due  to
-requirements of RFI  flagging, while being configurable in  its time integration
-capabilities.  A major requirement of the implementation was that of development
-time, which effectively eliminated a firmware based approach.
+\item The correlator  requirements for AARTFAAC \\
+The correlator ingests about 120Gbps of data and needs to carry out ~17TFLOPs of
+computation  theoretically  in real-time,  with  minimum  latency. It  needs  to
+produced  channelized  data from  the  subband  inputs  due to  requirements  of
+flagging  and calibration.   A  major requirement  was  to minimize  development
+effort, which effectively eliminated a firmware based approach.
 
 \item Motivating the GPGPU approach\\
 Of the available approaches, an heterogenous GPGPU approach turned out to be the
@@ -465,9 +464,7 @@ been used as  an argument against using GPGPU systems  for correlation. However,
 with increasing number  of signal sources, the I/O  requirements scale linearly,
 while the compute  requirements scale quadratically. Thus, a  large enough input
 system can make the application compute bound. This is the case withthe AARTFAAC
-system. Assuming the input subbands from the 1152 dipole elements would be split
-into 64 channels, with a one second time integration, the total required compute
-power required is ~17 TFLOP/sec. The latest GPUs come close to this requirement.
+system. The latest GPUs come close to meeting our requirements.
 
 \item Functional blocks \\
 The signal processing blocks necessary to achieve the correlator specs are shown
@@ -490,24 +487,27 @@ carry out the last stage of the swizzle operation to optmize the data layout for
 computing the spectral coherence on a GPU.
 
 The  implementation  consists  of  two identical  machine  configurations,  each
-capable of handling 16 incoming subbands from 12 stations. Each machine consists
-of dual Xeon-class processors  with 24 cores each. The CPUs  are connected to 32
-GB of memory each. Five AMD FirePro  S10000 GPU cards are available per machine,
-interfaced to the CPUs over 8x16bit  PCIe lanes (TODO: Verify correctness).  The
-memory is  organised in  a NUMA configuration,  with a  QuickPathInterface (QPI)
-connection between the two CPUs. To receive  the ~5Gbps data output from each of
-the 12  stations, the  server is equipped  with 2x40Gbps  infiniband interfaces,
-each collecting  the ~30Gbps data  from 6  stations.  The ~5Gbps  single station
-bandwidth is aggregated by a switch with  dual 40Gbps output port, which in turn
-connects to an induvidual correlator server.\\
+capable  of processing  16  incoming  subbands from  12  stations. Each  machine
+consists  of  dual Xeon-class  processors  with  24  cores  each. The  CPUs  are
+connected to 32 GB  of memory each, operating in a  NUMA configuration. Five AMD
+FirePro S10000 GPU cards are available  per machine, interfaced to the CPUs over
+8x16bit PCIe lanes (TODO: Verify correctness). To receive the ~5Gbps data output
+from each  of the 12 stations,  the server is equipped  with 2x40Gbps infiniband
+interfaces, each  receiving data from 6  stations, and also carrying  the output
+products to downstream processors.
 
-\textbf  {NUMA domains:}  In order  to  optimize throughput,  a single  machines
-resources are  organized into two  NUMA domains. Each  domain includes a  set of
-processing  cores, the  memory associated  with  them. The  hardware splits  the
-network I/O such that a single infiniband card can be present in each of the two
-NUMA domains. However, the split of the 5 GPU cards cannot be made symmetrically
-between the two domains, leaving one domain  with 3 GPUs, while the other domain
-as 2 GPUs.
+\textbf  {NUMA domains:}  A  Non Uniform  Memory Access  (NUMA)  CPU and  memory
+architecture is necessary in order to manage the high I/O over infiniband and to
+the GPUs,  as well as to  manage the last  stage data exchange of  the 6-station
+data  between CPUs  controlling the  two infiniband  cards (see  Fig. TODO).   A
+single  machines resources  are organized  into two  NUMA domains.   Each domain
+includes  an  infiniband  interface,  a  set of  processing  cores,  the  memory
+associated with  them. However,  the split  of the  5 GPU  cards cannot  be made
+symmetrically between the two domains, leaving one domain with 3 GPUs, while the
+other domain as 2 GPUs.  The NUMA  domains allow binding of threads handling I/O
+and  processing to  preferred CPU  cores.  This  also prevents  thread migration
+which  furthers data  locality,  and  allows routing  of  network interrupts  to
+preferred cores. This is essential for ensuring bounded latency.
 
 \subsection {Implementation of functional  blocks:} 
 
@@ -517,62 +517,57 @@ functional blocks on our target hardware.
 \textbf {CPU  Data alignment  and transpose:}  
 
 The raw data input  packets from individual stations need to  be collated for an
-entire  integration period  in  host memory,  before  we can  ship  data to  the
-correlator. We allocate 4 processor cores for the execution of a thread pool for
-I/O handling. Each  thread handles the data reception from  one station. A large
-buffer for  the incoming  dat is also  setup. Each of  these I/O  thread manages
-reception of data from the network, and record data into the large buffer. While
-the  copy of  contiguous  smilim work  on it  during  ayourwhileFinally, we  pay
-thilarge buffer space, correcting. The incoming UDP packets are organized in the
-{Station,  Time,  Subband} order,  whilte  it  is  more  efficient to  rate  the
-visibilities The visibilities.order.
+entire integration period  in host memory, before being shipped  to the GPUs for
+correlation. Four  processor cores are allocated  for the execution of  a thread
+pool for  the infiniband I/O  handling. Each  thread handles the  data reception
+from one station. The incoming UDP  packets are organized in the {Station, Time,
+  Subband} order,  while it  is more  efficient to  reorder them  into {Station,
+  Subband, time} order for processing. Further,  data from all stations needs to
+be time aligned.  Both  effects are achieved by setting up  a large, per subband
+buffer for  the incoming data,  with the  input threads converting  the incoming
+data from signed integer to float, and placing it into the correct time, station
+and subband  slot. The number of  missing slots is  also logged, and is  used to
+generate a weighting matrix for the estimated integrated visibilities.\\
 
+The interface to the openCL runtime is  via a Queue onto which available GPUs in
+the same NUMA domain  line up for claiming a subband's  data.  Once claimed, the
+raw data  is transferred  asynchronously to  the GPU  device memory  for further
+processing.  A  GPU  thread  is  created   to  handle  the  processing  of  data
+corresponding to the integration block of each subband separately.
 
+\textbf {Polyphase  Filterbank kernel:} The  first signal processing block  is a
+PolyPhase  filterbank, applied  onto the  single subband,  and constituted  of a
+256-tap FIR filter, followed by a 1-D complex FFT of the subband timeseries. The
+FFT is carried out using an openCL  library, while the FIR filter is implemented
+to maximize the usage of the GPU  compute unit registers. The output is saved in
+the device global memory.
 
- The data buffer consists
-of a  large number of  integration units (TODO: Is  this true?I think  a command
-line parameter allows specifying this, but then how is latency maintained?)  The
-assembled data buffer is asynchronously transferred to the GPU device memory for
-further  processing.(TODO: When  is the  last stage  swizzle carried  out? while
-transferring to  device memory,  or while  writing the  received data  into host
-memory? Is it even relevant without first doing the PFB?)
+\textbf {Delay  and Bandpass compensation  kernel:} Subsequent to  the PolyPhase
+filter bank implementation,  a delay compensation is applied to  account for the
+fixed cable  delays of the dipoles  with respect to a  reference antenna.  These
+delays are obtained  via a separate calibration, which is  typically carried out
+at a cadence of  a few months.  The delays are  available in calibration tables,
+and the frequency resolution is high enough  to apply them as phase rotations of
+the visibilities. The first stage polyphase filterbank implementation in the RSP
+board results in  a deterministic amplitude modulation on  the subband bandpass,
+and leading to unequal powers in  each subband channel.  This is demodulated via
+the application  of a fixed  amplitude correction by applying  channel dependent
+weights. The resulting data is brought  to the user desired frequency resolution
+by integrating the channels.
 
-\textbf {Polyphase Filterbank kernel:}
-A GPU thread is created to handle the processing of each subband separately. The
-first signal processing block is a PolyPhase filterbank, applied onto the single
-subband. A  64-tap FIR  filter first  increases the  frequency resolution  to 64
-channels  across the  subband.  This  is followed  by a  1-D complex  to complex
-64-point FFT on the channel data, leading to a final output frequency resolution
-of about 3kHz. Both the first stage FIR filter and the subsequent FFT is carried
-out on the GPUs. The FIR filter  implementation is custom code, while the FFT is
-carried out using a stock (TODO: which one?) openCL library. TODO: Memory layout.
-
-\textbf {Delay and Bandpass compensation kernel:} 
-Subsequent  to  the   PolyPhase  filter  bank  implementation,   a  fixed  delay
-compensation is  applied to  account for  the cable delays  of the  dipoles with
-respect  to a  reference  antenna.  These  delays are  obtained  via a  separate
-calibration, which is  typically carried out at  a cadence of a  few months. The
-delays are available in calibration tables, and the frequency resolution is high
-enough to  apply them as  phase rotations of  the visibilities. The  first stage
-polyphase filterbank implementation in the  RSP board results in a deterministic
-amplitude modulation on  the subband bandpass, and leading to  unequal powers in
-each  subband channel.  This  is  demodulated via  the  application  of a  fixed
-amplitude correction by applying channel dependent weights. TODO: Memory layout.
-
-\textbf {Correlation kernel:}
-Each dipole's subbanded and channelized data  is then ready for correlation. For
-the dual-pol  input corresponding to N  input stream, the correlator  produces a
-covariance matrix of size 2Nx2N cells, with each cell corresponding to a product
-of the two polarizations, one of the XX, XY, YX and YY combinations possible.\\
-
-Due to the low Arithmetic intensity  of the correlation process, and the limited
-bandwidth  between host  and device  memory, the  GPU correlator  implementation
-optimises for data locality, based on  the available number of registers and per
-compute  unit (TODO:  technical term  here?) [Ref:  van Nieuwpoort  Romein]. The
-covariance matrix is  split into 2x2 cells,  which allow a vectorised  load of 4
-floats  (float4), with  the accumulators  remaining in  registers. The  computed
-correlations are then collated into device  global memory by every thread group,
-with a final write from device to host memory. BIG TODO: Memory layout.
+\textbf {Correlation  kernel:} Each dipole's  subbanded and channelized  data is
+then  ready  for  correlation.   Depending   on  the  user  input  for  specific
+polarizations,  the   necessary  output   covariance  matrix   configuration  is
+defined. Only  one triangle of  the hermitean matrix  needs to be  computed, and
+this is broken down  into squares and triangles of size 2x2,  which are then the
+primary unit of computation on the GPU compute units. This choice results in the
+best  utilization  of  the  compute   unit  register  set  for  correlation  and
+accumulation, as  well as the use  of a vectorized  load of 4 floats.   The post
+correlation products are  written to device global memory by  each GPU execution
+thread.  An  event is  generated on  the completion  of the  task, and  the host
+initiates transfer  of the output  bufer to host  memory. The timing  and weight
+related metadata is added  to the correlations to form the  record which is then
+streamed out over a TCP connection to downstream processors.
 
 \textbf  {Asynchronous host  to device  transfers overlapping  with compute:}  A
 source  of throughput  bottleneck  for the  streaming,  low Aritmetic  Intensity
@@ -582,8 +577,8 @@ extent, the  transfer of  computed correlations  from the  device memory  to the
 host. The  PCIe bandwidth limitation  (TODO: Is  it just bandwidth,  or multiple
 access to the same memory address?) can be addressed by scheduling data transfer
 asynchronously, while overlapping  the computation of the kernels  with the data
-transfer.
-
+transfer.  This has  been found  to  have a  profound effect  on throughput  and
+latency.
 
 \textbf {Parallization axis:} Parallelization  is fundamentally on the frequency
 axis, with  each subband being  processed independently. Within a  subband, each
@@ -593,55 +588,66 @@ channel of the subband correlation matrix  is also processed independently via a
 GPU thread  group. Further, a  single channel  covariance matrix is  broken into
 cells, which are also computed independently.
 
-- Enormous I/O  requirements. Is a  streaming, real-time application  with large
-- I/O  requirements. This  can  be a  problem for  implementation  in many  core
-- hardware.   
-- Computational demands  grow  quadratically. Challenging  computing step, since  
-  computation grows  quadratically with  number of  inputs.
-- Recent trend is to correlate in software  instead of hardware, due to flexibility and
-- to reduce development effort.
-- I/O requirements: 1156*8*16*195312.5 bits/sec.
-- Output resolution: Limited by time and frequency smearing effects, described more in a forward section.
-- Justification for correlating on a GPU as against special purpose hardware, or super computers (take from a GPU paper).
-- Logical blocks of the correlator:
-The correlator consists of the following logical blocks:
-- The input section: Job is to receive the incoming data.
-- The ring buffer for alignment of input streams: Forms a time aligned set of input data. All incoming data packets are copied into a slot in memory based on the timestamp from the data.
-- A second level polyphase filterbank is applied to the incoming subbanded data. This provides the necessary input frequency resolution, and also allows to carrout the subband amplitude modulation caused as a side effect of the first stage poly-phase filter bank. The correction is based on a theoretical response to the PFB.
-- The input is then passed on to the GPU via a host-device transfer, to carry out the actual correlation. The host-device transfer is on the critical path from latency and throughput perspective.
-- The combination of two stations is called a baseline, total number of baselines is N*(N+1)/2. This includes autocorrelations.
-- The correlator can operate on different input data modes. We describe the results in terms of 16-bit complex inputs. We address the question of scaling up the system in section [forward ref].
-- Description of the operation of correlation.
-- Description of the output products.
-- Choice of doing floating point operations (get info from e.g. D'Addario)
-- How many FLOPS/byte of incoming data? (arithmetic intensity).
-- Memory organization in host memory.
-- Memory organization in device memory. Any optimizations for reduction of memory loads.
-- Tuning of tile size to implementation architecture. Make the tilesize as large as possible while fitting in registerspace for maximum utilization of loaded data.
-- Description of tile selection of data and resulting arithmetic intensity.
-- Table of properties of the chosen architecture (like table 3 of van niewpoort and romein, many core correlator architecture.)
-- Ratio between FLOPS and Bytes/sec of memory bandwidth: indicator of performance of memory system.
-- Performance is bound both by theoretical peak performance, and the product of memory bandwidth and arithmetic intensity.
-- Mention theoretical peak performance, get teh actual value from John Romein (See Sec. 3.6 of Nieuwpoort paper), what fraction of peak performance is achieved?
-- Kernel performance?
-- Achieving GPU theoretical performance depends on setting up an adequate tile size, this in turn depends on the nnumber of available registers, and the host-device bandwidth (?).
-
--- Code related summary points --
-- Overall program architecture: What does the CPU do, what gets offloaded to the GPU?
-- What tile size is used?
-- Are the XY and YX hands calculated? What does -m9 do?
-- Buffer sizes, memory footprint?
-
 
 \section {\label{sec:calim} Real-time calibration and imaging}
-\begin {itemize}
- \item {Architecture, implementation choices, performance}
- \item  {Visibility  and  image  buffering strategy  for  followup  analysis  of
-   detected transients}
- \item {Quicklook images data path}
- \item {Unit test architecture}
- \item {Interface to TraP}
-\end {itemize}
+The real-time  flow of generated visibilities  need to be calibrated  and imaged
+autonomously,  and  in bounded  time.   This  is  a departure  from  traditional
+synthesis  imaging,  where the  long  observations  needed for  sensitivity  and
+adequate UV coverage are bracketed  with observations of calibrator sources. The
+oversampled instantaneous UV coverage, the wide field of view and the relatively
+poor instantaneous sensitivity  of the AARTFAAC array results in  us utilizing a
+model  sky  based  multi-source  self  calibration  approach,  as  described  in
+\cite{prasad}.   The calibration  and imaging  is carried  out on  a cluster  of
+mutlicore server  class machines, where  a dedicated master thread  implements a
+pipeline to service  an individual subband.  User configurability  is limited to
+choice of spectral and temporal resolution.
+
+\textbf {Autonomous flagging:} A fixed threshold based flagging is first carried
+out  on the  incoming covariances.  For every  timeslice of  a subband,  this is
+carried out along  the dipole and frequency dimensions by  first determining the
+population  standard  deviation,  and  then flagging  out  visibility  real  and
+imaginary components greater than the desired threshold.
+
+\textbf  {Calibration  and  Imaging  pipeline:}  The  flagged  visibilities  are
+amplitude and phase calibrated at the  channel level using a simple point source
+model of  the four  brightest sources  (Cas.A, Cyg.A,  Vir.A, Tau.A,  termed the
+A-team)  in the  visible sky.  As part  of the  calibration process,  the A-team
+sources are subtracted  out from the calibrated visibilities in  order to reduce
+the  contribution  of  their  sidelobes   to  the  generated  images.\\  A  flux
+calibration is  then applied  based on  the apparent fluxes  of Cas.A  and Cyg.A
+during the  observation. The calibrated  per channel visibility stream  of every
+stream is streamed out  again over TCP to a machine  which implements the actual
+spectral and temporal integration to the desired level.
+
+Here, the channel outputs  of all subbands are ingested into  a large buffer and
+ordered based on  their timestamps.  The spectral integration is  carried out by
+gridding all visibilities onto a common  grid, while the temporal integration is
+carried out by accumulation of the gridded visibilities. Prior to integration, a
+quality control step based  on the rms thresholds on the  visibilities is run to
+weed out  members of  the integration  set with  a high  variance due  to failed
+calibration.  The Eigen3  [TODO: Ref] C++ template library is  used to implement
+all stages of matrix processing.  The calibrated and integrated visibilities are
+then subjected  to tapering and  weighting, before being Fourier  Transformed to
+generate the final snapshot image.
+
+\textbf {Buffered visibilities and images:} The final stage integrator outputs a
+timeseries of images  per spectral integration unit. These are  passed to the an
+image plane transient detection pipeline (TraP),  which can generate a signal on
+the detection  of a reliable candidate  transient. Since the reliability  can be
+affected  by the  various  operations  like flagging,  tapering  etc.  that  the
+visibilities are subjected to, the integrator  has the ability to dump its large
+internal buffer  of visibilities and images  to disk on receiving  a signal. The
+dumped data can be then be processed more carefully.
+
+
+%\begin {itemize}
+% \item {Architecture, implementation choices, performance}
+% \item  {Visibility  and  image  buffering strategy  for  followup  analysis  of
+%   detected transients}
+% \item {Quicklook images data path}
+% \item {Unit test architecture}
+% \item {Interface to TraP}
+%\end {itemize}
 
 \section {\label{sec:acontrol} The AARTFAAC control interface}
 \begin{figure*}[htbp]
