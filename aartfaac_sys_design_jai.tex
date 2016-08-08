@@ -395,7 +395,7 @@ the  data into  a UDP  packet  which is  transmitted  on a  long haul  10Gigabit
 Ethernet interface  to the  remote correlator.  A  single Uniboard  operates two
 10Gbps links  to the central processing  machines, located at the  University of
 Groningen about 50Km away.  Each link  carries about 9.7Gbps of data, consisting
-of 16 subbands of 16bits from all dipoles in the station.\\
+of 16 subbands of 16bits from all dipoles in the station. More details on the Uniboard are available in \citep{gunst2014application}.\\
 
 \noindent  \textbf {Data  rates  and bandwidth  limitations:  } The  fundamental
 limitation  to  AARTFAAC  processed  bandwidth is  presented  by  the  bandwidth
@@ -808,7 +808,13 @@ Parameter & Compute time (ms) & Processing (TFLOPs)\\ \colrule
 CPU data transform & 16.7 &0.1626  \\
 GPU FFT & \hphantom{0}10.0&0.678  \\
 GPU Delay and Bandpass correction & 2441.0 & 0.0\tnote{a}  \\
-GPU correlation & 212.9 & 4.824\tnote{a}  \\ \colrule
+GPU correlation & 212.9 & 4.824\tnote{a}  \\
+Calibration & 453 & TODO & Both XX and YY pols, calibrating at the subband level \\
+Imaging & 20 & TODO & Gridding and FFT for 1 image per pol per subband \\ 
+TraP & 800 & TODO & Speculative, waiting for Gijs to give a better number\\
+ \colrule
+Total & TODO & TODO & Expected latency
+
 \end{tabular}
 \begin{tablenotes}
 \item[a] Sample table notes.
