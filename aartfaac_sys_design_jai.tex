@@ -555,7 +555,7 @@ FirePro S10000 GPU cards are available  per machine, interfaced to the CPUs over
 8x16bit PCIe lanes (TODO: Verify correctness). To receive the ~5Gbps data output
 from each  of the 12 stations,  the server is equipped  with 2x40Gbps Ethernet
 interfaces, each  receiving data from 6  stations, and also carrying  the output
-products to downstream processors.
+products to downstream processors.\\
 
 \noindent  \textbf  {High  bandwidth  switch:} An  intermediate  high  bandwidth
 Ethernet switch (Mellanox ConnectX-3 MT27500),  in combination with the Uniboard
@@ -564,7 +564,7 @@ data stream. This  results in the same  subset of subbands from  all 12 stations
 being transmitted to the same server, 6 to each of the Ethernet interfaces.  The
 Back-node  FPGAs of  the Uniboards  encapsulate  data such  that a  subset of  8
 subbands from 6 stations have an identical  destination IP address of one of the
-interfaces.
+interfaces.\\
 
 \noindent \textbf  {NUMA domains:} A  Non Uniform  Memory Access (NUMA)  CPU and
 memory architecture is necessary in order to receive the incoming high bandwidth
@@ -726,11 +726,11 @@ all stages of matrix processing.  The calibrated and integrated visibilities are
 then subjected  to tapering and  weighting, before being Fourier  Transformed to
 generate the final snapshot image.\\
 
-\noindent \textbf {Buffered visibilities and images:} The final stage integrator outputs a
-timeseries of images  per spectral integration unit. These are  passed to the an
-image plane transient detection pipeline (TraP),  which can generate a signal on
-the detection  of a reliable candidate  transient. Since the reliability  can be
-affected  by the  various  operations  like flagging,  tapering  etc.  that  the
+\noindent \textbf {Buffered visibilities and images:} The final stage integrator
+outputs a timeseries  of images per spectral integration unit.  These are passed
+to the an image plane transient  detection pipeline (TraP), which can generate a
+signal on the detection of a reliable candidate transient. Since the reliability
+can be affected by the various operations like flagging, tapering etc.  that the
 visibilities are subjected to, the integrator  has the ability to dump its large
 internal buffer  of visibilities and images  to disk on receiving  a signal. The
 dumped data can be then be processed more carefully.\\
@@ -744,6 +744,118 @@ dumped data can be then be processed more carefully.\\
 % \item {Unit test architecture}
 % \item {Interface to TraP}
 %\end {itemize}
+\section {\label{sec:trap} Transient search methodology}
+The  Transients  Pipeline  (TraP,  \citep{swinbank2015lofar})  carries  out  the
+detection  of transients  and  variable sources  in AARTFAAC  images.   It is  a
+software package  optimized for the detection  of transients in radio  images by
+specifically dealing with  the correlated noise and Point  Spread related issues
+in radio  images. It consists of  a collection of python  processes carrying out
+image processing,  and a database  which is used  to store the  image processing
+outputs as well as to carry out  operations on the collective.  It operates on a
+timeseries of  image cubes  (each timeslice  consisting of  two spatial  and one
+spectral axis). 
+
+For any given image cube, it constructs  a catalog of all point sources (modeled
+by elliptical Gaussians)  in every spectrally resolved image,  and compares them
+against a database of point sources detected in previous timeslices.  The result
+is the detection  of \textit{new} or \textit{variable} sources.   The former are
+sources appearing  at locations where no  sources were seen in  previous epochs,
+and the latter are sources which have been observed for multiple epochs and show
+significant variability in their light curves. These results are computed on the
+basis of  the multifreqency  light-curves for every  detected source,  which are
+available in the database.
+
+The  TraP is  the real-time  consumer of  the generated  multifrequency AARTFAAC
+images,  and produces  two  outputs: A  trigger  to the  outside  world in  near
+real-time on  the reliable detection  of a short-duration transient  or variable
+source,  and  a spectrally  resolved  database  of  lightcurves of  all  sources
+detected in a timeseries of image cubes, together with time-resolved information
+about their variability.  The latter is available for both real-time and offline
+data mining, e.g., to implement different transient detection approaches.
+
+Two aspects of TraP are interesting from the AARTFAAC perspective: The effect of
+AARTFAAC  specific characteristics  on  the image  processing,  and the  overall
+latency induced by TraP operating in a streaming mode.
+
+\noindent   \textbf  {AARTFAAC   specific  characteristics:}   AARTFAAC  creates
+instantaneous,  transit   mode  (non-tracking)  All-sky  images,   and  will  be
+continuously  monitoring the  sky. The  very  wide field  of view  results in  a
+varying sensitivity across an instantaneous image, which has to be accounted for
+before  islands  of high  SNR  pixels  can  be  decomposed into  sources.   TraP
+approaches this by modeling the background (mean) pixel value and RMS across the
+image by  estimating these values  within every cell of  a grid laid  across the
+image, and interpolating the values over  the full image.
+
+Inspite of resolutions of a tens of  arcmin, sources in AARTFAAC images can have
+significant positional  jitter due  to ionospheric  effects.  TraP  accounts for
+these during its \textit{source association}  step, when it identifies whether a
+detected source can be associated with an existing source in its database, based
+on spatial  proximity.  Due to  the non-tracking  nature of the  instrument, the
+AARTFAAC  sensitivity pattern  is fixed  wrt.  local  coordinates. Hence,  point
+sources can have  very different SNRs as they traverse  the sensitivity pattern,
+and can  thus be  classified as a  new source when  their SNR  crosses detection
+thresholds. TraP accomodates  such cases by keeping track  of the fields-of-view
+and sensitivities of all images it  processes, and comparing a detected source's
+flux density against recorded sensitivities of  images covering the same area to
+check if it could have been detected previously.
+
+TraP  calculates  two  variability  metrics  for every  detected  source  in  an
+instantaneous image, and  per frequency bin $\nu$: the  flux density coefficient
+of  variation  $V_{\nu}$,  and  the significance  of  flux  density  variability
+$\eta_{\nu}$. Although they are time  aggregated values based on the lightcurve
+of the source, they can be generated iteratively via running statistics, and are
+available for  every timeslice.  Thus,  the streaming nature of  AARTFAAC images
+can be accomodated in the existing framework.
+
+Finally,  since  theoretically  the  AARTFAAC  image  stream  is  infinite,  the
+lightcurve  database needs  to  be truncated  in time.  Based  on the  datarates
+generated,   a   database  containing   a   weeks   worth  of   lightcurves   is
+managable.  After this,  a new  database  will be  created for  the next  weeks'
+observation. For requirements of lightcurves  with durations longer than a week,
+wrapper  scripts will  be used  to query  the multiple  databases and  construct
+required light curve.
+
+Fig. \ref{fig:afaac_arch}  shows TraP as  the ultimate sink of  AARTFAAC images,
+which will ingest 4 streams of image timeseries. Each stream corresponds to an 8
+subband, 1second integrated image timeseries.
+
+%% Ques  for Gijs:  -  Paper talks  about  storing  the image  cube  in memory.  He
+%% mentioned a queue.  What is the effect  on latency?  - New  detections are first
+%% checked to see whether  the region of sky where they are  seen has been surveyed
+%% to  the   same  or  lower   sensitivity  where   the  source  would   have  been
+%% visible. Supposing  there is a weak  source at low elevations  initially (so not
+%% detected). When it reaches closer to the zenith, it will be detected, but should
+%% not be classified as a new source, because
+
+
+%%  - Variability detected  on timescales of seconds to years
+%% - Cataloging process  is better  than an image  differencing approach  for radio
+%% images. Also provides a light curve for  sources.  - TRAP was meant for RSM data
+%% analysis, which  created a logarithmically  spaced timeseries of images.   - The
+%% real-time mode  of Trap  will also  be used in  regular LOFAR  real-time imaging
+%% observations.   - Trap  looks for  new  detections and  variability in  existing
+%% sources. variability metrics  are retained on all sources.  -  Trap input is 3-D
+%% image cubes, with a freq. axis.  - Output is near real-time alerts, and archival
+%% database of lightcurves of all point sources, along with variability metrics.  -
+%% src finding  and measurement process is  applied independently to each  plane of
+%% the data cube, with point  sources parameterized by elliptical Gaussians. Source
+%% association checks if the new measurements are updates on an existing source, or
+%% a new detection.  -  Variability metrics are produced on a  per image basis, not
+%% on a  complete timeseries. Variability metrics  can change with time  due to the
+%% arrival of  new data.  -  Only stokes-I images  are searched for  transients.  -
+%% AARTFAAC  will produce  extremely  large  number of  images,  this  needs to  be
+%% factored in.  -  Every detected source has a running  catalog entry. All sources
+%% in  an image  are first  attempted  to be  associated with  an existing  running
+%% catalog entry.   - Since  a source  is deemed sacred  across the  frequency axis
+%% (sources  found in  images at  different frequencies  at the  same location  are
+%% associated with  the same  source in  the running  catalog) how  is the  case of
+%% broadband images treated? When different parts  of the source can be brighter at
+%% different freqencies?   - Null detections  (src was  expected, but not  found in
+%% this  image)  lead  to forced  fits  at  the  catalog  position, with  the  peak
+%% constrained to the  measurement at the catalog position.   - Variability metrics
+%% are  updated for  every image  cube  that is  processed,  and a  history of  the
+%% variability can be pulled from the database  in order to see how the variability
+%% of sources evolves due to the addition of image timeslices.
 
 \section {\label{sec:acontrol} The AARTFAAC control interface}
 \begin{figure*}[htbp]
@@ -821,18 +933,14 @@ Parameter & Compute time (ms) & Processing (TFLOPs)\\ \colrule
 CPU data transform & 16.7 &0.1626  \\
 GPU FFT & \hphantom{0}10.0&0.678  \\
 GPU Delay and Bandpass correction & 2441.0 & 0.0\tnote{a}  \\
-GPU correlation & 212.9 & 4.824\tnote{a}  \\
-Calibration & 453 & TODO & Both XX and YY pols, calibrating at the subband level \\
-Imaging & 20 & TODO & Gridding and FFT for 1 image per pol per subband \\ 
+GPU correlation & 212.9 & 4.824  \\
+Online flagging & 74.3 &  & Thresholding visibility amplitudes across time and frequency\\
+Calibration & 249 & TODO & Both XX and YY pols, calibrating at the subband level \\
+Imaging & 40 & TODO & Gridding and FFT for 1 image per pol per subband \\ 
 TraP & 800 & TODO & Speculative, waiting for Gijs to give a better number\\
  \colrule
 Total & TODO & TODO & Expected latency
-
 \end{tabular}
-\begin{tablenotes}
-\item[a] Sample table notes.
-\item[b] Sample table notes.
-\end{tablenotes}
 \label{tab:afaac_specs}
 \end{wstable}
 
