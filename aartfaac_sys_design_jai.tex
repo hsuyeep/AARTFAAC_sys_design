@@ -857,28 +857,30 @@ subband, 1second integrated image timeseries.
 %% variability can be pulled from the database  in order to see how the variability
 %% of sources evolves due to the addition of image timeslices.
 
-\section {\label{sec:acontrol} The AARTFAAC control interface}
+\section {\label{sec:acontrol} The AARTFAAC Control System}
 \begin{figure*}[htbp]
 \centering
-\includegraphics[width=0.75\textwidth]{Figs/afaac_ctrl_system.png}
+\includegraphics[width=0.50\textwidth]{Figs/acs.png}
 \caption{The  control  system  architecture  which  interfaces  with  the  LOFAR
   observation scheduling system and triggers AARTFAAC observations.}
 \label{fig:afaac_ctrl_sys}
 \end{figure*}
-The  AARTFAAC  control subsystem  coordinates  the  diverse processing  and  I/O
-infrastructure of  the AARTFAAC system, and  acts as a liaison  between the LOFAR
-observatory,  AARTFAAC user  and  system.   It is  essential  to the  autonomous
-functioning of  the instrument by  providing fault  tolerance.  It has  a python
-based client-server architecture, with the  server process existing on the LOFAR
-manager node and clients waiting for  commands on the various AARTFAAC subsystem
-controllers. Every scheduled  LOFAR observation is monitored  for suitability as
-an AARTFAAC observation. When such an observation is found, commands are sent to
-the target subsystems  over TCP connections to dedicated  ports.  The sequential
-execution   allows   parsing   of   process  outputs,   and   re-initiation,   if
-necessary. Successful  execution of an  AARTFAAC observation is reported  to the
-administrators via email.  Figure  \ref{fig:afaac_ctrl_sys} shows the functional
-blocks  of  the AARTFAAC  control  system,  and  their  interface to  the  LOFAR
-scheduling system.\\  
+The  AARTFAAC  control subsystem  coordinates  the  diverse processing  and
+I/O infrastructure of  the AARTFAAC system, and  acts as a liaison  between the
+LOFAR observatory,  AARTFAAC user  and  system.   It is  essential  to the
+autonomous functioning of  the instrument by  providing fault  tolerance.  It
+has  a python based client-server architecture, with the  server process
+existing on the LOFAR manager node and clients waiting for  commands on the
+various AARTFAAC subsystem controllers. Every scheduled  LOFAR observation is
+monitored  for suitability as an AARTFAAC observation. Figure
+\ref{fig:afaac_ctrl_sys} shows the functional blocks  of  the AARTFAAC  control
+system.  When an observation is initiated, the control system launches the
+callgraph using the current active AARTFAAC configuration. This configuration
+defines what subbands to listen to and how many images to create.  The
+callgraph initiates everything at 1 (stations, aartfaac tv, pipelines). When
+atleast 1 pipeline is started and the stations are functioning properly it
+calls everything at 2 and so on. An email will be sent when an error occurs or
+when an observation successfully started.\\  
 
 \noindent \textbf  {Monitoring interface:} The control  system allows monitoring
 the  various  subsystems at  fine  granularity,  making  it useful  to  localize
