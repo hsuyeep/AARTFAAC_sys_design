@@ -11,7 +11,8 @@
 %\documentclass[draft]{ws-jai}
 \documentclass{ws-jai}
 \usepackage[flushleft]{threeparttable}
-%% \usepackage{subfig}
+%% \usepackage{caption}
+%% \usepackage{subcaption}
 \begin{document}
 
 \catchline{}{}{}{}{} % Publisher's Area please ignore
@@ -200,7 +201,7 @@ interferometric processing with other stations.
 \subsection {\label{subsec:aartfaac}  The AARTFAAC system}
 \begin{figure*}[htbp]
 \centering
-\includegraphics[width=1\textwidth]{Figs/overall_afaac_Arch_blks.png}
+\includegraphics[width=1\textwidth]{Figs/Overall_arch_afaac/Slide1.png}
 \caption {Overall  architecture of the  AARTFAAC all-sky monitor  depicting each
   processing sub block, along with the Monitoring and Control (MAC) system. }
 \label{fig:afaac_arch}
@@ -395,7 +396,7 @@ the  data into  a UDP  packet  which is  transmitted  on a  long haul  10Gigabit
 Ethernet interface  to the  remote correlator.  A  single Uniboard  operates two
 10Gbps links  to the central processing  machines, located at the  University of
 Groningen about 50Km away.  Each link  carries about 9.7Gbps of data, consisting
-of 16 subbands of 16bits from all dipoles in the station.\\
+of 16 subbands of 16bits from all dipoles in the station. More details on the Uniboard are available in \citep{gunst2014application}.\\
 
 \noindent  \textbf {Data  rates  and bandwidth  limitations:  } The  fundamental
 limitation  to  AARTFAAC  processed  bandwidth is  presented  by  the  bandwidth
@@ -747,7 +748,7 @@ dumped data can be then be processed more carefully.\\
 \section {\label{sec:acontrol} The AARTFAAC control interface}
 \begin{figure*}[htbp]
 \centering
-\includegraphics[width=0.5\textwidth]{Figs/control_sys.png}
+\includegraphics[width=0.75\textwidth]{Figs/afaac_ctrl_system.png}
 \caption{The  control  system  architecture  which  interfaces  with  the  LOFAR
   observation scheduling system and triggers AARTFAAC observations.}
 \label{fig:afaac_ctrl_sys}
@@ -779,12 +780,24 @@ results section.
 
 \section {\label{sec:results} Commissioning results}
 \begin{figure*}[htbp]
+ \begin {minipage}{\textwidth}
  %% \subfloat
-   \includegraphics[width=0.5\textwidth]{Figs/A12_uncal.png}
+   \includegraphics[width=\textwidth]{Figs/A12_uncal.png}
  %% \subfloat 
  %%  \includegraphics[width=0.3\textwidth]{Figs/A12_uncal.png}
 \caption{An uncalibrated image from the 12-station AARTFAAC system, demonstrating the hardware data routing and  correlator functioning.}
 \label{fig:afaac_results}
+ \end {minipage}
+ 
+\begin {minipage}{\textwidth}
+ %% \subfloat
+   \includegraphics[width=\textwidth]{Figs/24hr_skymap.png}
+ %% \subfloat 
+ %%  \includegraphics[width=0.3\textwidth]{Figs/A12_uncal.png}
+\caption{A calibrated skymap created from a 24hr observation from AARTFAAC.}
+\label{fig:afaac_24hr}
+ \end {minipage}
+  
 \end{figure*}
 The AARTFAAC system is currently in place and operating with 6 LOFAR stations, a
 total bandwidth of  ~3MHz, with real-time images being created  at a 1sec/192kHz
@@ -808,7 +821,13 @@ Parameter & Compute time (ms) & Processing (TFLOPs)\\ \colrule
 CPU data transform & 16.7 &0.1626  \\
 GPU FFT & \hphantom{0}10.0&0.678  \\
 GPU Delay and Bandpass correction & 2441.0 & 0.0\tnote{a}  \\
-GPU correlation & 212.9 & 4.824\tnote{a}  \\ \colrule
+GPU correlation & 212.9 & 4.824\tnote{a}  \\
+Calibration & 453 & TODO & Both XX and YY pols, calibrating at the subband level \\
+Imaging & 20 & TODO & Gridding and FFT for 1 image per pol per subband \\ 
+TraP & 800 & TODO & Speculative, waiting for Gijs to give a better number\\
+ \colrule
+Total & TODO & TODO & Expected latency
+
 \end{tabular}
 \begin{tablenotes}
 \item[a] Sample table notes.
