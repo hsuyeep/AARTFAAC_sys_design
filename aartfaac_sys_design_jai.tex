@@ -48,7 +48,7 @@ time cadence of a few seconds. The image timeseries are then monitored for short
 and bright radio  transients. On detection of a transient,  low latency triggers
 will be  generated for LOFAR,  which can  carry out follow-up  observations.  In
 this paper,  we describe  our heterogeneous, hierarchical  design to  manage the
-~240 Gbps raw data rate, and the ~17TFLOPs of computing needed.  We discuss the
+~240 Gbps raw data rate, and the TODO TFLOPs of computing needed.  We discuss the
 implementation  of   the  instrumentation,  its  capabilities,   and  show  some
 commissioning results.
 \end{abstract}
@@ -61,21 +61,24 @@ commissioning results.
 celestial transients, sources in the  sky whose detectable properties can change
 on short timescales.   These explosive events provide insight into  a variety of
 astrophysics,  ranging from  emission mechanisms  of jets  to properties  of the
-intervening  medium \citep{fender2006lofar,lazio2009dynamic}.  Studies of  short
-duration radio  emission from such  objects has  been restricted to  either very
-short  timescales  (milliseconds to  seconds,  e.g.   Pulsars[TODO:Ref]), or  to
-comparatively  longer timescales  (months to  years[TODO:Ref]) primarily  due to
-observational time,  or instrumental constraints,  the former due to  the narrow
-fields  of view  of traditional  instruments.  For  time resolved  observations,
-radio instrumentation  is generally available  in broadly two classes;  A single
-dish  or phased  array beam  formed timeseries  characterized by  high time  and
-frequency  resolution,  fields  of  view  of a  few  degrees  but  poor  spatial
-resolution,  or interferometric  aperture synthesis  imaging observations.   The
-latter  provides  high  spatial  resolution,  but  have  poor  time  resolution,
-typically  needing  several hours  of  observation  time  to build  up  adequate
-coverage  in the  UV plane  via earth  rotation aperture  synthesis.  The  above
-classes roughly translate to coherent  (short timescales) and incoherent (longer
-timescales) sources of emission[TODO: Ref].
+intervening  medium \citep{fender2006lofar,lazio2009dynamic}.  
+
+%% Studies of short  duration radio emission from such objects  has been restricted
+%% to   either    very   short   timescales   (milliseconds    to   seconds,   e.g.
+%% Pulsars[TODO:Ref]),   or  to   comparatively   longer   timescales  (months   to
+%% years[TODO:Ref])   primarily  due   to  observational   time,  or   instrumental
+%% constraints,  the  former due  to  the  narrow  fields  of view  of  traditional
+%% instruments.
+
+For time resolved observations, radio  instrumentation is generally available in
+broadly  two classes;  A  single dish  or phased  array  beam formed  timeseries
+characterized by  high time and  frequency resolution, fields  of view of  a few
+degrees  but  poor spatial  resolution,  or  interferometric aperture  synthesis
+imaging observations.   The latter  provides high  spatial resolution,  but have
+poor time  resolution, typically  needing several hours  of observation  time to
+build  up  adequate  coverage  in  the UV  plane  via  earth  rotation  aperture
+synthesis.  The above  classes roughly translate to  coherent (short timescales)
+and incoherent (longer timescales) sources of emission[TODO: Ref].
 
 The serendipitous discovery of a new  class of radio transient termed Fast Radio
 Bursts  (FRBs)\citep{spitler2015fast,   thornton2013population}  has  galvanized
@@ -97,18 +100,14 @@ allowing other telescopes to carry out follow-up observations.
 % coherent emission and  expected class of sources, at what  brightness levels can
 % we expect to see things (take from Lazio LWA paper).>
 
-The AARTFAAC  radio transient  monitor is  an All-sky  radio telescope  based on
-LOFAR. Its goal  is to continuously scan  the sky for bright  transients, and on
-reliably detecting one, to generate a trigger to other telescopes for sensitive,
-broad  band monitoring.   It is  a leading  effort among  a group  of new  radio
-telescopes  aiming for  detection  of  bursts of  radio  emission by  continuous
-monitoring  of the  low  radio frequency  sky. Other  notable  examples of  such
-telescopes are  the Long Wavelength  Array (LWA), \cite{ellingsonLWA1},  and the
-Murchison Widefield  Array (MWA), \cite {tingay2013murchison}.   Such telescopes
-are characterized by  having moderate resolution and sensitivity  as compared to
-contemporary telescopes, but  with extremely wide fields of  view (typically all
-sky),  high  availability  and  autonomous   calibration  and  imaging  in  near
-real-time.
+The  AARTFAAC  radio  transient  monitor  is such  an  All-sky  radio  transient
+detector.  It is  a leading effort among  a group of new  radio telescopes, with
+other   notable    examples   being    the   Long   Wavelength    Array   (LWA),
+\cite{ellingsonLWA1},   and  the   Murchison   Widefield   Array  (MWA),   \cite
+     {tingay2013murchison}.   Such   telescopes  are  characterized   by  having
+     moderate resolution and sensitivity as compared to contemporary telescopes,
+     but  with  extremely  wide  fields   of  view  (typically  all  sky),  high
+     availability and autonomous calibration and imaging in near real-time.
 
 The  wide field  of  views necessary  for  an instrument  like  AARTFAAC can  be
 achieved by sampling the sky with wide field dipoles. This, however comes at the
@@ -133,7 +132,7 @@ Solar monitoring, RFI surveying, LOFAR beam model validation etc.
 
 Finally, the  search for fast  transients across wide fields  of view will  be a
 fundamental capability of phase 1 of  the Square Kilometer Array (SKA) telescope
-\cite{colgate2011searching}.  The  AARTFAAC  system  is  currently  the  largest
+\cite{colegate2011searching}.  The  AARTFAAC  system  is  currently  the  largest
 aperture array implementation  for transient monitoring. As such,  it provides a
 very realistic  testbench for  technological approaches to  all aspects  of this
 problem.
@@ -486,7 +485,7 @@ Ethernet control link to the RSP boards of the station.
 %  machines hosting AMD GPUs}
 \caption{The hierarchical  data processing and routing  necessary for optimizing
   correlator  compute  performance   on  GPGPUs.  Here,  the   flowing  data  is
-  represented by the triad of $[Ai,sb[i-j],t]$, where Ai refer to an individual
+  represented by the triad of $[di,sb[i-j],t]$, where di refer to an individual
   dipole, sb[i-j] refer  to the range of  processed subbands, and t  refers to a
   time  sample.  The orange  blocks  correspond  to hierarchical  elements  that
   shuffle data }
@@ -602,7 +601,7 @@ data and to transfer them to the GPUs,  as well as to manage the last stage data
 exchange of the  6-station data between CPUs controlling the  two Ethernet cards
 (see Fig. TODO).  The resources available to a single machine are organized into
 two  NUMA domains  on  that machine.   Each domain  includes  a 40Gbps  Ethernet
-interface, a set of processing cores,  the memory associated with them. However,
+[interface, a set of processing cores,  the memory associated with them. However,
 the  split of  the 5  GPU cards  cannot be  made symmetrically  between the  two
 domains, leaving one domain with 3 GPUs,  while the other domain as 2 GPUs.  The
 NUMA domains allow  binding of threads handling I/O and  processing to preferred
@@ -851,6 +850,17 @@ Fig. \ref{fig:afaac_arch}  shows TraP as  the ultimate sink of  AARTFAAC images,
 which will ingest 4 streams of image timeseries. Each stream corresponds to an 8
 subband, 1second integrated image timeseries.
 
+\noindent \textbf {Latency:}  TraP latency is contributed by  the source finder,
+and the  database operation. The major  operations of the source  finder are the
+RMS and background  map estimation, and fitting to detected  sources. The former
+scales quadratically  with the number  of pixels  in an individual  image plane,
+while the latter scales linearly with  the number of detected sources.  Database
+operational times  have also  been shown  to scale linearly  with the  number of
+sources detected  in an image. The  total compute times of  the sourcefinder and
+the  database population  on AARTFAAC  data  have been  measured to  be under  a
+second.
+
+
 %% Ques  for Gijs:  -  Paper talks  about  storing  the image  cube  in memory.  He
 %% mentioned a queue.  What is the effect  on latency?  - New  detections are first
 %% checked to see whether  the region of sky where they are  seen has been surveyed
@@ -964,12 +974,12 @@ resulting All-sky snapshot image from the AARTFAAC monitoring webpage interface.
 \begin{tabular}{@{}cccc@{}} \toprule
 Parameter & Compute time (ms) & Processing (TFLOPs)\\ \colrule
 CPU data transform & 16.7 & 0.1626  \\
-GPU FIR & 8.4 & 1.726
+GPU FIR & 8.4 & 1.726\\
 GPU FFT & 10.0 & 0.678  \\
 % GPU Delay and Bandpass correction & 2441.0 & 0.0\tnote{a}  \\
 GPU correlation & 212.9 & 4.824  \\
 Online flagging & 74.3 &  & Thresholding visibility amplitudes across time and frequency\\
-Calibration & 249 & Both XX and YY pols, calibrated at the channel level \\
+Calibration & 249 & & Both XX and YY pols, calibrated at the channel level \\
 Imaging & 40 & TODO & Gridding and FFT for 1 Stokes-I image per subband \\ 
 TraP & 800 & TODO & Speculative, waiting for Gijs to give a better number\\
  \colrule
@@ -1057,7 +1067,7 @@ system is quantified by the achieved latency, and any drops in throughput due to
 intermittent processing delays. Our overall average latency has been found to be
 TODO secs, while throughput is maintained due to bounded processing. The breakup
 of   the   latency,   and   associated   computing   is   presented   in   Table
-\ref{tab:overall_perf}.\\
+\ref{tab:afaac_latency}.\\
 
 \noindent  \textbf   {AARTFAAC  Scalability:}   The  AARTFAAC   All-Sky  monitor
 implementation  can be  scaled  up  along the  spatial  (number  of dipoles)  or
@@ -1140,10 +1150,10 @@ multi-wavelength followup.
 Our implementation utilizes  a hierarchical routing of high bandwidth  data to a
 central  correlator,  with co-processing  within  the  hierarchy to  spread  the
 computing cost.  The most intensive computing  of the correlations of 1152 input
-streams requires $\sim$  17TFLOPs, and has been achieved on  a system consisting
+streams requires $\sim$  TODO TFLOPs, and has been achieved on  a system consisting
 of 10 state-of-the-art GPUs.  Our system  operates in real-time, with an average
 latency of TODO  seconds to the imaging, while generating  images with a dynamic
-range of close to 2000:1 with a time and spectral integration of 1sec/190kHz.
+range of close to 2000:1 with a time and spectral integration of 1sec/190kHz.\\
 
 %% The Scalability of  this system demonstrates the viability of  handling an SKA-1
 %% like  sea-of-antennas approach  to enable  wide field  radio monitoring  at high
