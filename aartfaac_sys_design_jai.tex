@@ -48,7 +48,7 @@ time cadence of a few seconds. The image timeseries are then monitored for short
 and bright radio  transients. On detection of a transient,  low latency triggers
 will be  generated for LOFAR,  which can  carry out follow-up  observations.  In
 this paper,  we describe  our heterogeneous, hierarchical  design to  manage the
-~0.12 Tbps raw data rate, and the ~17TFLOPs of computing needed.  We discuss the
+~240 Gbps raw data rate, and the ~17TFLOPs of computing needed.  We discuss the
 implementation  of   the  instrumentation,  its  capabilities,   and  show  some
 commissioning results.
 \end{abstract}
@@ -57,8 +57,6 @@ commissioning results.
 
 \section{\label{sec:Introduction}Introduction}
 
-%\begin{itemize}
-% \item What are celestial transients \\
 \noindent Transient astronomy  deals with the detection  and characterization of
 celestial transients, sources in the  sky whose detectable properties can change
 on short timescales.   These explosive events provide insight into  a variety of
@@ -79,7 +77,6 @@ coverage  in the  UV plane  via earth  rotation aperture  synthesis.  The  above
 classes roughly translate to coherent  (short timescales) and incoherent (longer
 timescales) sources of emission[TODO: Ref].
 
-%\item Current state of the science \\
 The serendipitous discovery of a new  class of radio transient termed Fast Radio
 Bursts  (FRBs)\citep{spitler2015fast,   thornton2013population}  has  galvanized
 interest in the field.  The detected  FRBs are characterized by large associated
@@ -100,11 +97,6 @@ allowing other telescopes to carry out follow-up observations.
 % coherent emission and  expected class of sources, at what  brightness levels can
 % we expect to see things (take from Lazio LWA paper).>
 
-% <TODO: Paragraph  summarizing the  current state of  knowledge of  low frequency
-% transients: Stewart NCP transient, other  searches at low freq. Conclusion: Need
-% for more monitoring.>
-
-% \item What is the AARTFAAC \\
 The AARTFAAC  radio transient  monitor is  an All-sky  radio telescope  based on
 LOFAR. Its goal  is to continuously scan  the sky for bright  transients, and on
 reliably detecting one, to generate a trigger to other telescopes for sensitive,
@@ -139,6 +131,13 @@ cases  and for  observatory operations.   These include  wide field  ionospheric
 monitoring  via apparent  flux and  position variations  of calibrator  sources,
 Solar monitoring, RFI surveying, LOFAR beam model validation etc.
 
+Finally, the  search for fast  transients across wide fields  of view will  be a
+fundamental capability of phase 1 of  the Square Kilometer Array (SKA) telescope
+\cite{colgate2011searching}.  The  AARTFAAC  system  is  currently  the  largest
+aperture array implementation  for transient monitoring. As such,  it provides a
+very realistic  testbench for  technological approaches to  all aspects  of this
+problem.
+
 The incoming  sampled voltages  pass through  various signal  processing blocks,
 resulting  in the  generation of  light curves  for sources  in a  timeseries of
 images.  The estimation of spatial coherence  requires the reordering of data to
@@ -153,7 +152,6 @@ resource  to  be optimized  is  the  engineering  and  development time  of  the
 functional blocks of the telescope.Thus, commercial, off the shelf technology is
 preferred in the development of AARTFAAC.
 
-%\item Paper description \\
 In  this paper,  we describe  the  AARTFAAC telescope  system architecture,  its
 instrumentation,  and  the commissioning  of  its  various subsystems.   Section
 \ref{sec:aartfaac_array} describes the array and the receiving antenna elements,
@@ -167,7 +165,6 @@ real-time,   autonomous  calibration   and   imaging  implementation.    Section
 \ref{sec:acontrol} describes our  control system for the  full instrument, which
 also interfaces with LOFAR.  In Section \ref{sec:results} we present performance
 metrics of the instrument as a whole.
-%\end{itemize}
 
 \section {\label{sec:aartfaac_array}The AARTFAAC Radio Transient Detection System}
 We  begin by  summarizing the  subsystems of  the LOFAR  telescope relevant  for
@@ -211,35 +208,42 @@ interferometric processing with other stations.
 
 The AARTFAAC  array consists of  12-stations from within  the core of  the LOFAR
 telescope,  with inter-dipole  distances  ranging  from a  few  meters within  a
-station, and  a maximum  of 1300m  across stations. The  exact core  stations of
-LOFAR     constituting      the     AARTFAAC     array     are      shown     in
+station, and a maximum of 1300m  (TODO) across stations. The exact core stations
+of    LOFAR     constituting    the     AARTFAAC    array    are     shown    in
 Fig. \ref{fig:afaac12_arrayconfig}.   In contrast  to LOFAR,  AARTFAAC processes
 the   data   of  each   individual   dipole   in   order  to   achieve   all-sky
 imaging. Therefore a spigot for each  dipole signal is created to an independent
 processing  architecture, prior  to the  phasing up  of dipoles  within a  LOFAR
 station.   This  allows  simultaneous  observing with  LOFAR,  leading  to  high
-availability of the AARTFAAC system.
+availability of the AARTFAAC system. Finally, the AARTFAAC system has been built
+on top  of LOFAR primarily due  to the extreme configurability  offered by LOFAR
+signal processing. However,  this restricts the layout of the  antennas within a
+station  as  well  as  the  stations  themselves,  resulting  in  a  sub-optimal
+configuration from the transients detection  perspective. This results, e.g., in
+gaps in the instantaneous 12-station UV  coverage, and the need for W-projection
+due  to non-coplanarity  across the  stations. Recognizing  this, the  co-planar
+AARTFAAC-6 array remains a viable sub-system for certain science cases.
 
 The station  constitutes the first component  of the radio sky  monitor. This is
 the only sub-system shared with LOFAR.  The AARTFAAC monitor consists of further
 subsystems which are independent of  LOFAR processing.  Its overall architecture
-is shown schematically in Figure  \ref{fig:afaac_arch}, and illustrates the main
+is shown schematically in Fig. \ref{fig:afaac_arch}, and illustrates the main
 processing  sub-blocks  of  the  instrument,  including  the  data  routing  and
 processing blocks, as well as the control and monitoring flow.
 
-To  summarize,  a  user  selected  subset  of  subbands  from  every  dipole  is
-transferred  as UDP  packets over  a dedicated  10Gbit fiber  connection to  the
-central  processing  systems.  These  are  received  by a  streaming,  real-time
-software  correlator implementation  which  aligns the  data  and estimates  the
-spatial  covariance  matrix  between  every  pair  of  dipoles.   The  generated
-visibilities  are streamed  over TCP/IP  to a  calibration and  imaging pipeline
-component which carries out autonomous imaging.  The images are then analyzed by
-a  software tool  (The  Transients  Pipeline, TraP,  \citep{swinbank2015lofar}),
-which extracts the  light curves of sources within the  image, and analyses them
-for variability  using a number  of parameters.  A (planned)  trigger generation
-subsystem   will   publish  reliable   triggers   in   the  form   of   VOEvents
-\cite{williams2006voevent}, which can be claimed  by other telescopes to observe
-candidates with high sensitivity and resolution.
+To summarize  the AARTFAAC processing, a  user selected subset of  subbands from
+every  dipole is  transferred  as  UDP packets  over  a  dedicated 10Gbit  fiber
+connection  to  the  central  processing  systems.   These  are  received  by  a
+streaming, real-time  software correlator  implementation which aligns  the data
+and estimates the spatial covariance matrix  between every pair of dipoles.  The
+generated visibilities  are streamed  over TCP/IP to  a calibration  and imaging
+pipeline component  which carries out  autonomous imaging.  The images  are then
+analyzed    by   a    software    tool   (The    Transients   Pipeline,    TraP,
+\citep{swinbank2015lofar}), which  extracts the  light curves of  sources within
+the image,  and analyses them for  variability using a number  of parameters.  A
+(planned) trigger  generation subsystem  will publish  reliable triggers  in the
+form  of VOEvents  \cite{williams2006voevent},  which can  be  claimed by  other
+telescopes to observe candidates with high sensitivity and resolution.
 
 
 
@@ -959,13 +963,14 @@ resulting All-sky snapshot image from the AARTFAAC monitoring webpage interface.
 \caption{Overall latency budget and performance of AARTFAAC subsystems.}
 \begin{tabular}{@{}cccc@{}} \toprule
 Parameter & Compute time (ms) & Processing (TFLOPs)\\ \colrule
-CPU data transform & 16.7 &0.1626  \\
-GPU FFT & \hphantom{0}10.0&0.678  \\
-GPU Delay and Bandpass correction & 2441.0 & 0.0\tnote{a}  \\
+CPU data transform & 16.7 & 0.1626  \\
+GPU FIR & 8.4 & 1.726
+GPU FFT & 10.0 & 0.678  \\
+% GPU Delay and Bandpass correction & 2441.0 & 0.0\tnote{a}  \\
 GPU correlation & 212.9 & 4.824  \\
 Online flagging & 74.3 &  & Thresholding visibility amplitudes across time and frequency\\
-Calibration & 249 & TODO & Both XX and YY pols, calibrating at the subband level \\
-Imaging & 40 & TODO & Gridding and FFT for 1 image per pol per subband \\ 
+Calibration & 249 & Both XX and YY pols, calibrated at the channel level \\
+Imaging & 40 & TODO & Gridding and FFT for 1 Stokes-I image per subband \\ 
 TraP & 800 & TODO & Speculative, waiting for Gijs to give a better number\\
  \colrule
 Total & TODO & TODO & Expected latency
@@ -973,46 +978,46 @@ Total & TODO & TODO & Expected latency
 \label{tab:afaac_latency}
 \end{wstable}
 
-\noindent \textbf {Signal Processing requirements:}
-A variety  of signal processing  algorithms are  utilized in the  generation and
-analysis of  real-time images from  AARTFAAC.  Here,  we describe only  the ones
-relevant to  the real-time performance  of the  system, i.e., not  including the
-characterization   of  transients,   and   only   discuss  their   computational
-requirements.  Their  implementation and  performance  can  vary based  on  data
-dimensions and its match to a particular computing architecture.
+%% \noindent \textbf {Signal Processing requirements:}
+%% A variety  of signal processing  algorithms are  utilized in the  generation and
+%% analysis of  real-time images from  AARTFAAC.  Here,  we describe only  the ones
+%% relevant to  the real-time performance  of the  system, i.e., not  including the
+%% characterization   of  transients,   and   only   discuss  their   computational
+%% requirements.  Their  implementation and  performance  can  vary based  on  data
+%% dimensions and its match to a particular computing architecture.
 
-The first signal processing block is the Polyphase Filterbank, which essentially
-consists of  an FIR  filter followed by  an FFT. This  filter splits  the signal
-spectrally with a  lower scalloping and spectral aliasing loss.  The filter bank
-can  be  represented by  TODO  Muls  and TODO  accs,  leading  to a  theoretical
-requirement of TODO FLOPs for N. The FFT has a compute load of TODO FLOPs.
+%% The first signal processing block is the Polyphase Filterbank, which essentially
+%% consists of  an FIR  filter followed by  an FFT. This  filter splits  the signal
+%% spectrally with a  lower scalloping and spectral aliasing loss.  The filter bank
+%% can  be  represented by  TODO  Muls  and TODO  accs,  leading  to a  theoretical
+%% requirement of TODO FLOPs for N. The FFT has a compute load of TODO FLOPs.
 
-The subbanded signal is usually further filtered to a higher spectral resolution
-by  a second  stage  filterbank. The  delay and  bandpass  correction involve  a
-complex multiplication of  the signal with a static weight  vector, leading to a
-load  of  TODO FLOPs  per  subband  for  TODO  output spectral  resolution.  The
-correlation  is  carried  out  at   the  output  spectral  resolution.  For  our
-specifications, this leads to a load of TODO FLOPs per channel per timeslice.
+%% The subbanded signal is usually further filtered to a higher spectral resolution
+%% by  a second  stage  filterbank. The  delay and  bandpass  correction involve  a
+%% complex multiplication of  the signal with a static weight  vector, leading to a
+%% load  of  TODO FLOPs  per  subband  for  TODO  output spectral  resolution.  The
+%% correlation  is  carried  out  at   the  output  spectral  resolution.  For  our
+%% specifications, this leads to a load of TODO FLOPs per channel per timeslice.
 
-The Calibration  is the only data  dependent, iterative operation to  be carried
-out in the  real-time chain. It consists of mainly  TODO matrix operations, each
-costing  TODO.  The  total  expected  cost of  calibration  is  TODO  FLOPs  per
-covariance matrix, assuming an average of TODO major and TODO minor cycles.
+%% The Calibration  is the only data  dependent, iterative operation to  be carried
+%% out in the  real-time chain. It consists of mainly  TODO matrix operations, each
+%% costing  TODO.  The  total  expected  cost of  calibration  is  TODO  FLOPs  per
+%% covariance matrix, assuming an average of TODO major and TODO minor cycles.
 
-The Imaging consists of a weighting  operation on all visibilities, per spectral
-unit. This  corresponds to a  cost of  TODO FLOPs/channel/sec. The  weighting is
-followed by a gridding of the calibrated  visibilities onto a grid whose size is
-dependent on  the image resolution  and field of view,  and with a  kernel whose
-size is  also dependent on output  resolution. For our TODO  typical parameters,
-this translates to  a cost of TODO  FLOPs. The generated images need  to be flux
-calibrated, which  corresponds to  an element by  element multiplication  with a
-correction matrix. This cost is about TODO FLOPs.
+%% The Imaging consists of a weighting  operation on all visibilities, per spectral
+%% unit. This  corresponds to a  cost of  TODO FLOPs/channel/sec. The  weighting is
+%% followed by a gridding of the calibrated  visibilities onto a grid whose size is
+%% dependent on  the image resolution  and field of view,  and with a  kernel whose
+%% size is  also dependent on output  resolution. For our TODO  typical parameters,
+%% this translates to  a cost of TODO  FLOPs. The generated images need  to be flux
+%% calibrated, which  corresponds to  an element by  element multiplication  with a
+%% correction matrix. This cost is about TODO FLOPs.
 
-Once  the calibrated  images are  available, they  are passed  through a  source
-finding stage, where islands of emission  are isolated into (point) sources, and
-their properties ascertained by fitting 2D Gaussians to the emission island. The
-source parameters are then recorded into a database for every timeslice, and the
-timeseries is further analyzed for variability and for detecting transients.
+%% Once  the calibrated  images are  available, they  are passed  through a  source
+%% finding stage, where islands of emission  are isolated into (point) sources, and
+%% their properties ascertained by fitting 2D Gaussians to the emission island. The
+%% source parameters are then recorded into a database for every timeslice, and the
+%% timeseries is further analyzed for variability and for detecting transients.
 
 \noindent \textbf  {Parallelization axis:}  Parallelization to handle  the compute
 requirements can be carried out along  the temporal, spectral or spatial axis of
@@ -1144,10 +1149,10 @@ range of close to 2000:1 with a time and spectral integration of 1sec/190kHz.
 %% like  sea-of-antennas approach  to enable  wide field  radio monitoring  at high
 %% sensitivity.\\
 
-\noindent  \textbf{Acknowledgments}  This  work  is  funded  by  the  ERC  grant
-C.2320.0056 awarded  to Prof.  Ralph  Wijers, University of Amsterdam.  We thank
-The Netherlands Foundation for Radio  Astronomy (ASTRON) for support provided in
-carrying out the commissioning observations.
+\noindent  \textbf{Acknowledgments} This  work  is funded  by  the ERC  Advanced
+Investigator  grant no.  247295 awarded  to Prof.   Ralph Wijers,  University of
+Amsterdam.  We thank The Netherlands Foundation for Radio Astronomy (ASTRON) for
+support provided in carrying out the commissioning observations.
 
 \bibliographystyle{ws-jai}
 \bibliography{ref}
