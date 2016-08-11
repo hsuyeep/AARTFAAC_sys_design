@@ -907,31 +907,39 @@ second.
   observation scheduling system and triggers AARTFAAC observations.}
 \label{fig:afaac_ctrl_sys}
 \end{figure*}
-The  AARTFAAC  control subsystem  coordinates  the  diverse processing  and  I/O
-infrastructure of the  AARTFAAC system, and acts as a  liaison between the LOFAR
-observatory,  AARTFAAC user  and  system.   It is  essential  to the  autonomous
-functioning of  the instrument by  providing fault  tolerance.  It has  a python
-based client-server architecture, with the  server process existing on the LOFAR
-manager node and clients waiting for  commands on the various AARTFAAC subsystem
-controllers. Every scheduled  LOFAR observation is monitored  for suitability as
-an AARTFAAC  observation. Figure  \ref{fig:afaac_ctrl_sys} shows  the functional
-blocks of  the AARTFAAC control system.   When an observation is  initiated, the
-control  system  launches  the  call-graph using  the  current  active  AARTFAAC
-configuration. This  configuration defines  what subbands to  listen to  and how
-many  images to  create.  The  call-graph initiates  everything at  1 (stations,
-aartfaac tv,  pipelines). When at least  1 pipeline is started  and the stations
-are functioning properly  it calls everything at  2 and so on. An  email will be
-sent when an error occurs or when an observation successfully started.\\
+The  AARTFAAC  control subsystem  coordinates  the  diverse processing  and
+I/O infrastructure of the  AARTFAAC system, and acts as a  liaison between the
+LOFAR observatory,  AARTFAAC user  and  system.   It is  essential  to the
+autonomous functioning of  the instrument by  providing fault  tolerance.  It
+has  a python based client-server architecture, with the  server process
+existing on the LOFAR manager node and clients waiting for  commands on the
+various AARTFAAC subsystem controllers. Every scheduled  LOFAR observation is
+monitored  for suitability as an AARTFAAC  observation. Figure
+\ref{fig:afaac_ctrl_sys} shows  the functional blocks of  the AARTFAAC control
+system.   When a LOFAR observation is  initiated and AARTFAAC is allowed to
+piggyback, the control  system launches  the  call-graph using  the  current
+active  AARTFAAC configuration.  This  user defined configuration determines
+i.e. what subbands to  listen to and how many  images to  create.  The
+call-graph initiates  everything at  1 (stations, aartfaac tv,  pipelines) by
+connecting to the appropreate clients and starting the processes. When at least
+$1$ out of $n$ pipelines is started  and the stations are functioning properly
+it calls everything at  $2$ (correlators and squashers). When at least $1$ out
+of $n$ correlators and $1$ out of $n$ squashers have been spawned it will
+initiate TraP in the third stage. An  email will be sent when an error occurs
+or when an observation successfully started.\\
 
-\noindent \textbf  {Monitoring interface:} The control  system allows monitoring
-the  various  subsystems at  fine  granularity,  making  it useful  to  localize
-problems within  the system.  A  Munin[ref] based system monitoring  tool allows
-viewing statistics  of I/O between nodes,  computing on various nodes,  and disk
-usage   via    a   webpage\footnote{https://proxy.lofar.eu/aartfaac/index.html},
-including history  at various time  cadences.  The processed outputs  at various
-stages in the pipeline are also presented onto a webpage for the end to end, and
-astronomical monitoring  of the system, some  examples of this are  shown in the
-results section.
+\noindent \textbf  {Monitoring interface:} The control  system allows
+monitoring the  various  subsystems at  fine  granularity,  making  it useful
+to  localize problems within  the system by examing the email reports.  For
+monitoring dataflow on a hardware level we use
+Munin\footnote{http://munin-monitoring.org}. This tool allows viewing
+statistics  of I/O between nodes,  computing on various nodes,  and disk usage
+via    a   webpage\footnote{https://proxy.lofar.eu/aartfaac/munin},
+including history  at various time  cadences.  The processed outputs  at
+various stages in the pipeline are also presented onto a
+webpage\footnote{https://proxy.lofar.eu/aartfaac/index.html} for the end to
+end, and astronomical monitoring  of the system, some  examples of this are
+shown in the results section.
 
 \section {\label{sec:results} Commissioning results}
 \begin{figure*}[htbp]
