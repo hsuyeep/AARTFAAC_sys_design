@@ -1007,20 +1007,21 @@ resulting All-sky snapshot image from the AARTFAAC monitoring webpage interface.
 \section {\label{sec:discussion} Discussion}
 \begin{wstable}[h]
 \caption{Overall latency budget and performance of AARTFAAC subsystems.}
-\begin{tabular}{@{}cccccc@{}} \toprule
- & A-12 & A-6 \\ \colrule
-Parameter & Compute time (ms) & Processing (TFLOPs) & Compute time (ms)  & Processing (TFLOPs) \\ \colrule
+\begin{tabular}{@{}cccc@{}} \toprule
+%% & A-12 & A-6 \\ \colrule
+Parameter & Compute time (ms) & Processing (TFLOPs) & Comment \\ \colrule
 CPU data transform & 16.7 & 0.1626  \\
 GPU FIR & 8.4 & 1.726\\
 GPU FFT & 10.0 & 0.678  \\
 % GPU Delay and Bandpass correction & 2441.0 & 0.0\tnote{a}  \\
 GPU correlation & 212.9 & 4.824  \\
 Online flagging & 74.3 &  & Thresholding visibility amplitudes across time and frequency\\
-Calibration & 249 & & Both XX and YY pols, calibrated at the channel level \\
-Imaging & 40 & TODO & Gridding and FFT for 1 Stokes-I image per subband \\ 
-TraP & 800 & TODO & Speculative, waiting for Gijs to give a better number\\
+Calibration & 249 & & Both XX and YY pols, calibrating 63 channels.\\
  \colrule
-Total & TODO & TODO & Measured latency: 1100s
+Total & 571 & & Measured latency upto calibration: 1100ms \\ \colrule
+
+Imaging & 40 & TODO & Gridding and FFT for 1 Stokes-I image per subband.\\ 
+TraP & 696 & TODO & Measured with 4 input subbands on non-production desktop.\\ \colrule
 \end{tabular}
 \label{tab:afaac_latency}
 \end{wstable}
