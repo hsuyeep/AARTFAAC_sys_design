@@ -726,26 +726,25 @@ over-sampled  instantaneous  UV  coverage,  the  wide  field  of  view  and  the
 relatively poor  instantaneous sensitivity of  the AARTFAAC array results  in us
 utilizing a model sky based multi-source self calibration approach, as described
 in \cite  {prasad2014real}.  The  calibration and  imaging is  carried out  on a
-cluster  of multicore  server class  machines, where  a dedicated  master thread
-implements a pipeline to service an individual subband.  User configurability is
-limited to choice of spectral and temporal resolution.\\
+cluster  of multicore  server class  machines, where each correlator output
+subband is connected to a flagging and calibration pipeline see Figure
+\ref{fig:afaac_arch}.\\
 
-\noindent \textbf  {Autonomous flagging:}  A fixed  threshold based  flagging is
-first  carried out  on  the  incoming covariances.   For  every  timeslice of  a
-subband, this is carried out along  the dipole and frequency dimensions by first
-determining the population standard deviation,  and then flagging out visibility
-real and imaginary components greater than the desired threshold.\\
+\noindent \textbf  {Autonomous flagging:} The realtime flagging scheme consists
+of sigma clipping at two levels. Clipping is applied to the amplitudes of all
+visibilities along the frequency axis and along the dipole axis. \\
 
-\noindent \textbf  {Calibration and Imaging pipeline:}  The flagged visibilities
-are amplitude  and phase calibrated  at the channel  level using a  simple point
-source model of  the four brightest sources (Cas.A, Cyg.A,  Vir.A, Tau.A, termed
-the A-team) in the visible sky.  As  part of the calibration process, the A-team
-sources are subtracted  out from the calibrated visibilities in  order to reduce
-the  contribution  of  their  sidelobes   to  the  generated  images.\\  A  flux
-calibration is  then applied  based on  the apparent fluxes  of Cas.A  and Cyg.A
-during the  observation. The calibrated  per channel visibility stream  of every
-stream is streamed out  again over TCP to a machine  which implements the actual
-spectral and temporal integration to the desired level.\\
+\noindent \textbf  {Calibration and Imaging pipeline:}  The flagged
+visibilities are amplitude  and phase calibrated  at the channel  level using a
+simple point source model of  the four brightest sources (Cas.A, Cyg.A,  Vir.A,
+Tau.A, termed the A-team) in the visible sky.  As  part of the calibration
+process, the A-team sources are subtracted  out from the calibrated
+visibilities in  order to reduce the  contribution  of  their  sidelobes   to
+the  generated  images.\\  A  flux calibration is  then applied  based on  the
+apparent fluxes  of the A-team during the  observation. The calibrated  per
+channel visibility stream  of every subband is streamed out  again over TCP to
+a machine  which implements the actual spectral and temporal integration to the
+desired level.\\
 
 Here, the channel outputs  of all subbands are ingested into  a large buffer and
 ordered based on  their timestamps.  The spectral integration is  carried out by
@@ -753,9 +752,10 @@ gridding all visibilities onto a common  grid, while the temporal integration is
 carried out by accumulation of the gridded visibilities. Prior to integration, a
 quality control step based  on the rms thresholds on the  visibilities is run to
 weed out  members of  the integration  set with  a high  variance due  to failed
-calibration.  The Eigen3  [TODO: Ref] C++ template library is  used to implement
-all stages of matrix processing.  The calibrated and integrated visibilities are
-then subjected  to tapering and  weighting, before being Fourier  Transformed to
+calibration.  The Eigen3 \citep{eigenweb} C++ template library with its SIMD
+support is  used to implement all stages of matrix processing and linear
+algebra in general.  The calibrated and integrated visibilities are then
+subjected  to tapering and weighting, before being Fourier  Transformed to
 generate the final snapshot image.\\
 
 \noindent \textbf {Buffered visibilities and images:} The final stage integrator
