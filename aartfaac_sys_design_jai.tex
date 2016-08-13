@@ -21,7 +21,7 @@
 
 \title{The AARTFAAC Radio Sky Monitor: System Design and Implementation}
 
-\author{Peeyush Prasad$^\dagger$, Folkert Huizinga$^\S$, Eric Kooistra$^\ddagger$, Daniel van der Schuur $^\ddagger$, Andre Gunst $^\ddagger$, John Romein $^\ddagger$, Mark Kuiack $^\S$, Gijs Molenaar $^\S$ and R.A.M.J. Wijers$^\S$}
+\author{Peeyush Prasad$^\dagger$, Folkert Huizinga$^\S$, Eric Kooistra$^\ddagger$, Daniel van der Schuur $^\ddagger$, Andre Gunst $^\ddagger$, John Romein $^\ddagger$, Mark Kuiack $^\S$, Gijs Molenaar $^\S$ and Ralph Wijers$^\S$}
 
 \address{
 $^\dagger$Anton Pannekoek Institute, University of Amsterdam, Amsterdam, The Netherlands, p.prasad@uva.nl\\
@@ -1018,7 +1018,8 @@ GPU correlation & 212.9 & 4.824  \\
 Online flagging & 74.3 &  & Thresholding visibility amplitudes across time and frequency\\
 Calibration & 249 & & Both XX and YY pols, calibrating 63 channels.\\
  \colrule
-Total & 571 & & Measured latency upto calibration: 1100ms \\ \colrule
+Total & 571 & & \textbf{Measured latency on production systems} \\
+ & & & \textbf {(upto calibration): 1100ms} \\ \colrule
 
 Imaging & 40 & TODO & Gridding and FFT for 1 Stokes-I image per subband.\\ 
 TraP & 696 & TODO & Measured with 4 input subbands on non-production desktop.\\ \colrule
@@ -1067,45 +1068,75 @@ TraP & 696 & TODO & Measured with 4 input subbands on non-production desktop.\\ 
 %% source parameters are then recorded into a database for every timeslice, and the
 %% timeseries is further analyzed for variability and for detecting transients.
 
-\noindent \textbf  {Parallelization axis:}  Parallelization to handle  the compute
-requirements can be carried out along  the temporal, spectral or spatial axis of
-the incoming  data.  Organizing timeslices  for parallel processing can  lead to
-latencies, which is inconsistent with the real-time requirement of AARTFAAC. The
-spatially  distributed dipoles  result  in each  dipole  stream being  initially
-processed  independently of  each other.   The correlation  process retains  the
-spatial independence  since the generated  covariance matrix can be  split along
-dipoles.   However,  the  processing  requires  alignment  along  the  time  and
-frequency axis,  and further analysis  (imaging) fuses the spatial  axis.  Thus,
-the  frequency axis  is  the  only truly  independent  axis  along the  complete
-processing chain, with each subband or channel being processed independently.
+%% \noindent \textbf  {Parallelization axis:}  Parallelization to handle  the compute
+%% requirements can be carried out along  the temporal, spectral or spatial axis of
+%% the incoming  data.  Organizing timeslices  for parallel processing can  lead to
+%% latencies, which is inconsistent with the real-time requirement of AARTFAAC. The
+%% spatially  distributed dipoles  result  in each  dipole  stream being  initially
+%% processed  independently of  each other.   The correlation  process retains  the
+%% spatial independence  since the generated  covariance matrix can be  split along
+%% dipoles.   However,  the  processing  requires  alignment  along  the  time  and
+%% frequency axis,  and further analysis  (imaging) fuses the spatial  axis.  Thus,
+%% the  frequency axis  is  the  only truly  independent  axis  along the  complete
+%% processing chain, with each subband or channel being processed independently.
 
-Parallelization at different levels in the hierarchy is matched to the available
-hardware architecture.  At upstream levels, the FPGAs operate in lock-step, with
-no dynamic scheduling of data to processing units. An important task here is the
-reorganizing of data along the frequency  axis such that the architecture of the
-computationally intense components (correlation) can  be fully utilized. The CPU
-offers   both  SIMD   via   vectored  instructions,   and   MIMD  via   multiple
-cores.\footnote  {Flynn's  taxonomy:  SIMD=Single  Instruction,  Multiple  Data,
-  MIMD=Multiple  Instruction,  Multiple Data}  [TODO:  What  is MIMD  used  here
-  for?]. The  GPU offers  operations on  loosely coupled  data via  its multiple
-compute units,
+%% Parallelization at different levels in the hierarchy is matched to the available
+%% hardware architecture.  At upstream levels, the FPGAs operate in lock-step, with
+%% no dynamic scheduling of data to processing units. An important task here is the
+%% reorganizing of data along the frequency  axis such that the architecture of the
+%% computationally intense components (correlation) can  be fully utilized. The CPU
+%% offers   both  SIMD   via   vectored  instructions,   and   MIMD  via   multiple
+%% cores.\footnote  {Flynn's  taxonomy:  SIMD=Single  Instruction,  Multiple  Data,
+%%   MIMD=Multiple  Instruction,  Multiple Data}  [TODO:  What  is MIMD  used  here
+%%   for?]. The  GPU offers  operations on  loosely coupled  data via  its multiple
+%% compute units,
 
-Since the data  from all dipoles is time and  frequency aligned when correlation
-occurs,  parallelization  is fundamentally  on  the  frequency axis,  with  each
-subband being processed  independently.  Within a subband, each  station data is
-processed  independently till  the  correlation stage,  where a  synchronization
-barrier is applied  to time align all  the dipole streams.  Each  channel of the
-subband  correlation matrix  is also  processed independently  via a  GPU thread
-group.  Further, a single channel covariance  matrix is broken into cells, which
-are also computed independently.\\
+%% Since the data  from all dipoles is time and  frequency aligned when correlation
+%% occurs,  parallelization  is fundamentally  on  the  frequency axis,  with  each
+%% subband being processed  independently.  Within a subband, each  station data is
+%% processed  independently till  the  correlation stage,  where a  synchronization
+%% barrier is applied  to time align all  the dipole streams.  Each  channel of the
+%% subband  correlation matrix  is also  processed independently  via a  GPU thread
+%% group.  Further, a single channel covariance  matrix is broken into cells, which
+%% are also computed independently.\\
 
 
 \noindent \textbf {System performance:} The overall performance of the real-time
-system is quantified by the achieved latency, and any drops in throughput due to
-intermittent processing delays. Our overall average latency has been found to be
-TODO secs, while throughput is maintained due to bounded processing. The breakup
-of   the   latency,   and   associated   computing   is   presented   in   Table
-\ref{tab:afaac_latency}.\\
+system  is quantified  by  the achieved  latency. Table  \ref{tab:afaac_latency}
+presents  the  measured  compute  time  for various  functional  blocks  of  the
+system. These  results have been  obtained for  the 6-station system,  since the
+calibration  and  imaging  component  of  the 12-station  system  has  not  been
+commissioned yet.  Thus, extrapolations on  the computation have  been generated
+for the 12-station  system. All reported times have been  measured on production
+systems, except for the TraP.
+
+Here,  we  see  that  the  most   compute  intensive  functional  block  is  the
+calibration,  whose compute  footprint  is dominated  by  the Weighted  Subspace
+Fitting model source position determination sub-block. Alternative approaches to
+this algorithm implementation will be  explored to reduce this cost. Calibration
+latency can also  vary based on the observing conditions  like RFI occupancy and
+the  presence of  the flaring  Sun. We  set an  upper limit  to the  calibration
+iterations, trading off instrumental sensitivity to maintain latency.
+
+The next  compute intensive component is  the correlator itself. Its  latency is
+independent of missing  or poor quality data, since the  collated data buffer is
+processed based on wall-clock time. Thread binding to CPU cores prevents process
+migration,  and  the absence  of  competing  processes reduce  operating  system
+induced non-deterministic latencies.
+
+For the 6-station system, we measure a latency of ~1.1second to calibrated image
+generation, on production hardware. This is about twice as expected from timings
+of the compute  blocks. The remaining latency occupancy includes  times taken by
+all compute blocks, as well as network and memory operation latencies. We expect
+this  to  grow  by factors  of  2-3  in  anticipation  of the  more  complicated
+calibration and imaging scheme for the 12-station AARTFAAC.
+
+A streaming variant  of the TraP is still being  commissioned. Current profiling
+reveals that  the source finding step  takes ~30\% of user  time, while database
+operations to update the light curves  of detected sources take about 15\%. Both
+these operations scale linearly with the number of detected sources in an image,
+and thus  latencies on the  12-station images are  expected to be  only slightly
+more.
 
 \noindent  \textbf   {AARTFAAC  Scalability:}   The  AARTFAAC   All-Sky  monitor
 implementation  can be  scaled  up  along the  spatial  (number  of dipoles)  or
@@ -1130,18 +1161,18 @@ stations in addition to  the two mentioned here would likely  require data to be
 transferred  between  multiple  CPUs  over  the  GigE  network,  which  will  be
 prohibitively slow.\\
 
-\noindent  \textbf {Impact  of sharing  dipoles with  LOFAR on  AARTFAAC:} LOFAR
-operates using  either the LBA  or the  HBA antenna at  a time. Further,  due to
-limited station level electronics for stations within the core, only a subset of
-the available  station dipoles can be  utilized. This implies that  the AARTFAAC
-telescope  is  dependent  on  LOFAR  for  the  choice  of  antenna  and  station
-configuration,  reducing the  availability  for all-sky  monitoring. Within  the
-station, only the LBA\_OUTER station  configuration is currently deemed suitable
-for  real-time imaging.   This mode  of  LOFAR operation  favorable to  AARTFAAC
-depends on  the observing  schedule and the  proposed observations.   Table TODO
-shows some  statistics from previous cycles  on the fraction of  observing modes
-favorable to AARTFAAC. Based on this, it may be reasonable to expect AARTFAAC to
-operate TODO fraction of time, typically.\\
+%% \noindent  \textbf {Impact  of sharing  dipoles with  LOFAR on  AARTFAAC:} LOFAR
+%% operates using  either the LBA  or the  HBA antenna at  a time. Further,  due to
+%% limited station level electronics for stations within the core, only a subset of
+%% the available  station dipoles can be  utilized. This implies that  the AARTFAAC
+%% telescope  is  dependent  on  LOFAR  for  the  choice  of  antenna  and  station
+%% configuration,  reducing the  availability  for all-sky  monitoring. Within  the
+%% station, only the LBA\_OUTER station  configuration is currently deemed suitable
+%% for  real-time imaging.   This mode  of  LOFAR operation  favorable to  AARTFAAC
+%% depends on  the observing  schedule and the  proposed observations.   Table TODO
+%% shows some  statistics from previous cycles  on the fraction of  observing modes
+%% favorable to AARTFAAC. Based on this, it may be reasonable to expect AARTFAAC to
+%% operate TODO fraction of time, typically.\\
 
 \noindent \textbf {Hierarchical  shuffling and transpose of  incoming data:} The
 voltages  are available  as a  sampled  timeseries per  polarization, with  time
