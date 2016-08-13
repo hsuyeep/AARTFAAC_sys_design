@@ -741,56 +741,71 @@ data transfer asynchronously,  while overlapping the computation  of the kernels
 with  the data  transfer.  This  has been  found to  have a  profound effect  on
 throughput and latency.\\
 
-\section {\label{sec:calim} Real-time calibration and imaging}
-The real-time  flow of generated visibilities  need to be calibrated  and imaged
-autonomously,  and  in bounded  time.   This  is  a departure  from  traditional
-synthesis  imaging,  where the  long  observations  needed for  sensitivity  and
-adequate UV coverage are bracketed  with observations of calibrator sources. The
-over-sampled  instantaneous  UV  coverage,  the  wide  field  of  view  and  the
-relatively poor  instantaneous sensitivity of  the AARTFAAC array results  in us
-utilizing a model sky based multi-source self calibration approach, as described
-in \cite  {prasad2014real}.  The  calibration and  imaging is  carried out  on a
-cluster  of multicore  server class  machines, where each correlator output
-subband is connected to a flagging and calibration pipeline see Figure
-\ref{fig:afaac_arch}.\\
+\section {\label{sec:calim} Real-time flagging, calibration and imaging}
+The real-time  flow of generated visibilities  need to be calibrated  and
+imaged autonomously,  and  in bounded  time.   This  is  a departure  from
+traditional synthesis  imaging,  where the  long  observations  needed for
+sensitivity  and adequate UV coverage are bracketed  with observations of
+calibrator sources. The over-sampled  instantaneous  UV  coverage,  the  wide
+field  of  view  and  the relatively poor  instantaneous sensitivity of  the
+AARTFAAC array results  in us utilizing a model sky based multi-source self
+calibration approach, as described in \cite  {prasad2014real}.  The
+calibration and  imaging is  carried out  on a cluster  of multicore  server
+class  machines, where each correlator output subband is connected to a
+flagging and calibration pipeline see Figure \ref{fig:afaac_arch}. We use the
+Eigen3 \citep{eigenweb} C++ template library with its SIMD support to implement
+all stages of matrix processing and linear algebra in general within these
+pipelines.\\
 
-\noindent \textbf  {Autonomous flagging:} The realtime flagging scheme consists
-of sigma clipping at two levels. Clipping is applied to the amplitudes of all
+\subsection{Calibration pipeline} Each subband stream coming out of the
+correlator is ingested into a multithreaded calibration pipeline with a
+ringbuffer. This ringbuffer stores the raw visibilities for approximately $60$
+seconds in memory which can be dumped to disk when an interesting event occurs
+for further examination by hand. A multi-consumer lock-free queue grabs the raw
+visibilities for processing through the multiple stages of the calibration
+pipeline.\\
+
+\noindent \textbf  {Weighting:} As the correlator receives UDP data per
+station, packets can get lost. This information is send to the calibration
+pipeline and corresponding visibilities are re-weighted to account for the loss
+of data. \\
+
+\noindent \textbf  {Flagging:} The realtime flagging scheme consists
+of sigma clipping along two axis. Clipping is applied to the amplitudes of all
 visibilities along the frequency axis and along the dipole axis. \\
 
-\noindent \textbf  {Calibration and Imaging pipeline:}  The flagged
-visibilities are amplitude  and phase calibrated  at the channel  level using a
-simple point source model of  the four brightest sources (Cas.A, Cyg.A,  Vir.A,
-Tau.A, termed the A-team) in the visible sky.  As  part of the calibration
-process, the A-team sources are subtracted  out from the calibrated
-visibilities in  order to reduce the  contribution  of  their  sidelobes   to
-the  generated  images.\\  A  flux calibration is  then applied  based on  the
-apparent fluxes  of the A-team during the  observation. The calibrated  per
-channel visibility stream  of every subband is streamed out  again over TCP to
-a machine  which implements the actual spectral and temporal integration to the
-desired level.\\
+\noindent \textbf  {Calibration:}  The flagged visibilities are amplitude  and
+phase calibrated  at the channel  level using a simple point source model of
+the four brightest sources (Cas.A, Cyg.A,  Vir.A, Tau.A, termed the A-team) in
+the visible sky.  As  part of the calibration process, the A-team sources are
+subtracted  out from the calibrated visibilities in  order to reduce the
+contribution  of  their  sidelobes   to the  generated  images. A  flux
+calibration is  then applied  based on  the apparent fluxes  of the A-team
+during the  observation. The calibrated  per channel visibility stream  of
+every subband is streamed out  again over TCP to a machine  which implements
+the actual spectral and temporal integration to the desired level.\\
 
-Here, the channel outputs  of all subbands are ingested into  a large buffer and
-ordered based on  their timestamps.  The spectral integration is  carried out by
-gridding all visibilities onto a common  grid, while the temporal integration is
-carried out by accumulation of the gridded visibilities. Prior to integration, a
-quality control step based  on the rms thresholds on the  visibilities is run to
-weed out  members of  the integration  set with  a high  variance due  to failed
-calibration.  The Eigen3 \citep{eigenweb} C++ template library with its SIMD
-support is  used to implement all stages of matrix processing and linear
-algebra in general.  The calibrated and integrated visibilities are then
-subjected  to tapering and weighting, before being Fourier  Transformed to
-generate the final snapshot image.\\
+\subsection{Imaging pipeline}
+Different calibrated subbands coming out of the calibration pipelines are
+recombined in the imaging pipeline for configurable image products of multiple
+subbands. \\
 
-\noindent \textbf {Buffered visibilities and images:} The final stage integrator
-outputs a timeseries  of images per spectral integration unit.  These are passed
-to the an image plane transient  detection pipeline (TraP), which can generate a
-signal on the detection of a reliable candidate transient. Since the reliability
-can be affected by the various operations like flagging, tapering etc.  that the
-visibilities are subjected to, the integrator  has the ability to dump its large
-internal buffer  of visibilities and images  to disk on receiving  a signal. The
-dumped data can be then be processed more carefully.\\
+\noindent \textbf  {Gridding:} The calibrated subband outputs are ingested into
+a large buffer and ordered based on  their timestamps.  The spectral
+integration is  carried out by gridding all visibilities onto a common  grid
+using bilinear interpolation, while the temporal integration is carried out by
+accumulation of the gridded visibilities. Prior to integration, a quality
+control step based  on the rms thresholds on the  visibilities is run to weed
+out  members of  the integration set with  a high  variance due  to failed
+calibration.\\
 
+\noindent \textbf  {Imaging:} The multi-subband gridded visibilities product is Fourier Transformed to
+generate the final snapshot image. \\
+
+\noindent \textbf  {Beammodel:} Finally a beammodel acquired by simulations of
+the LOFAR core is applied in the image plane to obtain a stable flux across the
+image. After this stage, the images are sent to an image plane transient
+detection pipeline (TraP).
 
 %\begin {itemize}
 % \item {Architecture, implementation choices, performance}
