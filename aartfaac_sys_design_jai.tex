@@ -91,8 +91,8 @@ discover  such  sources  in  a  targeted observation,  thus  requiring  a  blind
 searches. Also, a rapid follow-up over  a large wavelength regime is required to
 establish their emission phenomena and  associated parameters.  A recent example
 of  this requirement  is the  detection by  \citet{stewart2016lofar} of  a ~20Jy
-transient  in 60MHz  LOFAR  data,  whose characterization  has  suffered due  to
-inadequate multi-wavelength coverage.
+transient in 60MHz Low Frequency  Array (LOFAR) data, whose characterization has
+suffered due to inadequate multi-wavelength coverage.
 
 As a consequence, large field of view  radio sky monitors are being developed to
 continuously survey large parts of the  visible sky with shallow sensitivity and
@@ -105,10 +105,11 @@ follow-up observations.
 % coherent emission and  expected class of sources, at what  brightness levels can
 % we expect to see things (take from Lazio LWA paper).>
 
-The  AARTFAAC  radio  transient  monitor  is such  an  all-sky  radio  transient
-detector. It taps data from a subset  of the LOFAR antennas, and processes these
-data independently of LOFAR.  It is a leading effort among a  group of new radio
-telescopes, with other  notable examples being the Long  Wavelength Array (LWA),
+The  Amsterdam-ASTRON Radio  Transient Facility  and Analysis  Center (AARTFAAC)
+radio transient  monitor is such  an all-sky  radio transient detector.  It taps
+data from a subset of the LOFAR antennas, and processes these data independently
+of LOFAR.  It  is a leading effort  among a group of new  radio telescopes, with
+other   notable    examples   being    the   Long   Wavelength    Array   (LWA),
 \cite{ellingsonLWA1},   and  the   Murchison   Widefield   Array  (MWA),   \cite
      {tingay2013murchison}.   Such   telescopes  are  characterized   by  having
      moderate resolution and sensitivity as compared to contemporary telescopes,
@@ -225,7 +226,9 @@ station, and a maximum of 1300m  (TODO) across stations. The exact core stations
 of    LOFAR     constituting    the     AARTFAAC    array    are     shown    in
 Fig. \ref{fig:afaac12_arrayconfig}.
 
-\noindent  \textbf {Array  Configuration:} The  choice  of the  subset of  LOFAR
+\subsubsection {Array Configuration}
+% \noindent  \textbf {Array  Configuration:}
+ The  choice  of the  subset of  LOFAR
 stations used  in the AARTFAAC system  is dictated primarily by  imaging quality
 and sensitivity, as well as due to constraints on the latency of calibration and
 imaging. The central six stations of  the LOFAR telescope (called the superterp)
@@ -243,7 +246,7 @@ order to achieve  all-sky imaging. Therefore a spigot for  each dipole signal is
 created to  an independent processing architecture,  prior to the phasing  up of
 dipoles within a LOFAR station.   This allows simultaneous observing with LOFAR,
 leading  to high  availability of  the AARTFAAC  system.  Finally,  the AARTFAAC
-system  has  been   built  on  top  of  LOFAR  primarily   due  to  the  extreme
+system could be built  as an off shoothas of LOFAR primarily  due to the extreme
 configurability offered by LOFAR signal processing.  However, this restricts the
 layout of  the antennas  within a  station as well  as the  stations themselves,
 resulting  in   a  sub-optimal  configuration  from   the  transients  detection
@@ -251,9 +254,12 @@ perspective.  This  results, e.g.,  in gaps in  the instantaneous  12-station UV
 coverage,  and the  need  for  W-projection due  to  non-coplanarity across  the
 stations.  Recognizing  this, the co-planar  AARTFAAC-6 system remains  a viable
 sub-system for certain  science cases. It consists of the  6 innermost stations,
-which are shown marked with dashed circles in Fig. \ref{fig:afaac12_arrayconfig}.
+which      are      shown      marked      with      dashed      circles      in
+Fig. \ref{fig:afaac12_arrayconfig}.
 
-\noindent  \textbf  {Hierarchical  Data   Shuffling  and  Transpose:}  The  high
+\subsubsection   {Hierarchical  Data   Shuffling  and  Transpose}
+% \noindent  \textbf  {Hierarchical  Data   Shuffling  and  Transpose:}
+  The  high
 bandwidth data stream from a large number of spatially distributed dipoles needs
 to  be  ingested  while  sustaining the  computationally  demanding  correlation
 operation. The data also need arrangement in an optimal manner for the computing
@@ -295,17 +301,18 @@ streaming, real-time  software correlator  implementation which aligns  the data
 and estimates the spatial covariance matrix  between every pair of dipoles.  The
 generated visibilities  are streamed  over TCP/IP to  a calibration  and imaging
 pipeline component  which carries out  autonomous imaging.  The images  are then
-analyzed    by   a    software    tool   (The    Transients   Pipeline,    TraP,
-\citep{swinbank2015lofar}), which  extracts the  light curves of  sources within
-the image,  and analyses them for  variability using a number  of parameters.  A
-(planned) trigger  generation subsystem  will publish  reliable triggers  in the
-form  of VOEvents  \cite{williams2006voevent},  which can  be  claimed by  other
-telescopes to observe candidates with high sensitivity and resolution.
+analyzed      by       the      LOFAR      Transients       Pipeline,      TraP,
+\citep[TraP;][]{swinbank2015lofar}, which  extracts the light curves  of sources
+within  the  image,  and  analyses  them  for  variability  using  a  number  of
+parameters.   A (planned)  trigger  generation subsystem  will publish  reliable
+triggers  in  the form  of  VOEvents  \cite{williams2006voevent}, which  can  be
+claimed  by other  telescopes to  observe candidates  with high  sensitivity and
+resolution.
 
 
 
 \begin{wstable}[h]
-\caption{Specifications of the AARTFAAC All-sky radio monitor.}
+\caption{Specifications of the AARTFAAC all-sky radio monitor.}
 \begin{tabular}{@{}cccc@{}} \toprule
 Parameter & Specification & Units & Comment\\ \colrule
 Frequency range & 10-90 & MHz & Assuming LBA processing  \\
@@ -333,7 +340,7 @@ Time resolution & 1 & sec.\\ \colrule
 \end{figure*}
 
 
-We describe the various subsystems making up the AARTFAAC All-sky monitor in the
+We describe the various subsystems making up the AARTFAAC all-sky monitor in the
 following sections.
 
 \section {\label{sec:station_hardware} AARTFAAC Station Level Processing}
@@ -415,7 +422,9 @@ spectrum. In the  rest of the document,  we refer to 8-bit  subbands.  Thus, the
 current system  can generate 72  subbands, of  which 32 subbands  are processed,
 corresponding to about 6.25 MHz.\\
 
-\noindent \textbf  {Sampling Clock and  Timing:} This sub-system is  shared with
+%\noindent \textbf  {Sampling Clock and  Timing:}
+\subsubsection  {Sampling Clock and  Timing}
+ This sub-system is  shared with
 LOFAR.  A  clock  distributor  board  (SyncOptics) at  the  center  is  used  to
 distribute  a 10MHz  reference  to every  one  of the  24  core LOFAR  stations,
 including the 12  AARTFAAC stations.  The 10MHz reference is  generated by a GPS
@@ -438,8 +447,8 @@ on the ADC sampling clock.  All further aligning and timing of the incoming data
 in  both LOFAR  and  AARTFAAC systems  is  carried out  based  on this  embedded
 timestamp.
 
-\subsection {AARTFAAC Piggy Back System}
-The AARTFAAC  piggy back system  is implemented by URI  (UniBoard-RSP Interface)
+\subsection {AARTFAAC Piggyback System}
+The AARTFAAC  piggyback system  is implemented by URI  (UniBoard-RSP Interface)
 boards. These  boards are installed in  the ring and basically  tap-off the data
 from each ring interface. The ring data is  copied on the URI board. One copy is
 forwarded  to  the next  RSP  board  in the  ring  to  carry out  regular  LOFAR
@@ -460,16 +469,18 @@ subbands for 32  dipoles onto a single data link.   Altogether, three URI boards
 are adequate to  transfer and transpose 72 subbands at  8-bits into the Uniboard
 based router for all antennas within a station.\\
 
-\noindent  \textbf {AARTFAAC  Data Router:}  The  data router  is the  interface
-between the station  level instrumentation and the next  signal processing unit,
-the   correlator.    The   data   router  is   implemented   with   a   UniBoard
-\citep{gunst2014application}.  The  board consists  of 4 upstream  FPGAs (called
-back-nodes)  connected  to  the  URI  boards, and  4  downstream  FPGAs  (called
-front-nodes) to connect to  the correlator over a long haul  fiber link. Each of
-the back-node FPGAs  receives 18 consecutive subbands out of  the 72 subbands in
-the URI board  output.  However, output bandwidth constraints  from the stations
-to the central signal processing limit  the back-nodes to transferring 16 of the
-18 subbands onward, making 64 subbands available within this board.
+\subsubsection {AARTFAAC  Data Router}
+% \noindent  \textbf {AARTFAAC  Data Router:}
+The data router  is the interface between the station  level instrumentation and
+the next signal processing unit, the correlator.  The data router is implemented
+with a UniBoard \citep{gunst2014application}.  The  board consists of 4 upstream
+Field Programmable Gate  Arrays (FPGA) (called back-nodes) connected  to the URI
+boards, and 4 downstream FPGAs (called front-nodes) to connect to the correlator
+over  a  long  haul  fiber  link.   Each of  the  back-node  FPGAs  receives  18
+consecutive subbands out  of the 72 subbands in the  URI board output.  However,
+output bandwidth constraints from the  stations to the central signal processing
+limit the  back-nodes to transferring  16 of the  18 subbands onward,  making 64
+subbands available within this board.
 
 A second level  of data rerouting is  carried out at this stage  such that links
 from the  3 different URI boards  (each containing 18 subbands  from 32 dipoles)
@@ -482,7 +493,7 @@ long  haul 10Gigabit  Ethernet interface  to  the remote  correlator.
 Due to limitations  of central processing, currently only  one front-node output
 is utilized. Thus,  only 32 of the  64 subbands available from  the UniBoard are
 transmitted to  the central  processing machines, located  at the  University of
-Groningen about 50Km  away.  Each station output link carries  about 9.7 Gbps of
+Groningen about 50 km  away.  Each station output link carries  about 9.7 Gbps of
 data, consisting of 32 subbands of 8bits from all dipoles in the station.\\
 
 %% \noindent  \textbf {Data  rates  and bandwidth  limitations:  } The  fundamental
@@ -506,7 +517,9 @@ data, consisting of 32 subbands of 8bits from all dipoles in the station.\\
 %% subbands, only  16 are forwarded  for correlation.   Each 10Gbps link  carries 8
 %% subbands, corresponding to ~4.5Gbps of data.
 
-\noindent \textbf {Monitoring and Control  Interface:} Every station is equipped
+\subsubsection {Monitoring and Control  Interface}
+% \noindent \textbf {Monitoring and Control  Interface:}
+ Every station is equipped
 with a  Local Control  Unit (LCU), which  is a computer  system running  a Linux
 operating system.  These systems are networked  to the LOFAR control system, and
 also act as Network Time Protocol  (NTP) clients. Thus, their absolute times are
@@ -567,10 +580,10 @@ array covariance matrices with a chosen time and frequency averaging.
 The correlator ingests about 9.7 Gbps per station in real-time, corresponding to
 32  subbands of  8bits  for each  of  the  1152 dipoles.   It  needs to  produce
 channelized data  from the subband  inputs due  to requirements of  flagging and
-calibration. The resulting  computation is theoretically about ~5  TFLOPs, to be
-carried out  in real-time,  with minimum  latency.  A  major requirement  was to
-minimize  development  effort,  which   effectively  eliminated  an  FPGA  based
-approach.
+calibration. The resulting  computation is theoretically about  ~5 Tera Floating
+Point  Operations per  second (TFLOPs),  to be  carried out  in real-time,  with
+minimum latency.  A major requirement  was to minimize development effort, which
+effectively eliminated an FPGA based approach.
 
 Of the available  approaches, a heterogeneous architecture  consisting of general
 purpose  CPUs in  combination with  Graphical Processing  Units (GPUs)  has been
@@ -649,7 +662,9 @@ stations,   and   also   carrying   the  output   correlations   to   downstream
 processors. These  machines are  depicted in Fig.  \ref{fig:afaac_station_hw} as
 Corr0 and Corr1.\\
 
-\noindent  \textbf  {High  Bandwidth  Switch:} An  intermediate  high  bandwidth
+% \noindent  \textbf  {High  Bandwidth  Switch:}
+\subsubsection  {High  Bandwidth  Switch}
+ An  intermediate  high  bandwidth
 Ethernet switch,  in combination with the  Uniboard data router, is  utilized to
 carry out routing of  12 station data to a single  machine.  The Back-node FPGAs
 of the  Uniboards encapsulate  data such  that a  subset of  16 subbands  from 6
@@ -659,7 +674,9 @@ of stations 0-5 goes to interface 0  of Corr0, the same subbands of the stations
 6-11 goes to interface 1 of Corr0.   The remaining half of the bandwidth goes in
 a similar fashion to the Corr1 machine.\\
 
-\noindent  \textbf  {NUMA  Domains:}  A  NUMA CPU  and  memory  architecture  is
+% \noindent  \textbf  {NUMA  Domains:}
+\subsubsection  {NUMA  Domains}
+  A  NUMA CPU  and  memory  architecture  is
 necessary in order  to receive the incoming high bandwidth  data and to transfer
 them to  the GPUs,  as well as  to manage  the last stage  data exchange  of the
 6-station  data   between  CPUs   controlling  the   two  Ethernet   cards  (see
@@ -681,7 +698,9 @@ This is essential for ensuring throughput of the system.
 In this  section, we provide a  description of the implementation  of individual
 functional blocks on our target hardware.\\
 
-\noindent \textbf  {CPU Data Collation and  Time Alignment:} The raw  data input
+\subsubsection  {CPU Data Collation and  Time Alignment}
+% \noindent \textbf  {CPU Data Collation and  Time Alignment:}
+ The raw  data input
 packets from individual  stations need to be collated for  an entire integration
 period in host memory,  before being shipped to the GPUs  for correlation.  4 of
 the  12  available processor  cores  in  a NUMA  domain  are dedicated for handling the 
@@ -724,7 +743,9 @@ architecture.\\
 %% To  optimize performance,  the  work-unit splits  the data  such  that only  the
 %% register file per CU is utilized at every stage.\\
 
-\noindent \textbf {Polyphase Filterbank:} The first signal processing block is a
+\subsubsection {Polyphase Filterbank}
+% \noindent \textbf {Polyphase Filterbank:}
+ The first signal processing block is a
 256 channel PolyPhase  filterbank. This consists of two kernels:  FIR filter and
 FFT.   It is  applied onto  the  single subband  stream from  every dipole,  and
 constituted of a bank  of 256, 16-tap FIR filters, followed by  a 1-D, 256 point
@@ -732,7 +753,9 @@ complex FFT  of the  filter outputs.   The FFT  is carried  out using  an openCL
 library, while the  FIR filter is implemented  to maximize the usage  of the GPU
 compute unit registers. The output is stored in the device memory.\\
 
-\noindent \textbf {Delay,  Bandpass Compensation and Transpose  Kernel:} A delay
+%\noindent \textbf {Delay,  Bandpass Compensation and Transpose  Kernel:}
+\subsubsection {Delay,  Bandpass Compensation and Transpose  Kernel}
+ A delay
 compensation is applied  to the channelized data to account  for the fixed cable
 delays of  the dipoles with  respect to a  reference antenna.  These  delays are
 obtained via a separate calibration, which is typically carried out at a cadence
@@ -759,7 +782,9 @@ channels to dipoles, which requires a transpose of the data.
 \label{fig:acm_spatial_split}
 \end{figure*}
 
-\noindent \textbf {Correlation Kernel:}  Each dipole's subbanded and channelized
+\subsubsection {Correlation Kernel}
+% \noindent \textbf {Correlation Kernel:}
+  Each dipole's subbanded and channelized
 data is then ready for  correlation.  Fig. \ref{fig:acm_spatial_split} shows the
 output covariance matrix which needs to  be computed, given the input per-dipole
 channelized data. Only  one triangle of the hermitian  covariance matrix needs
@@ -783,8 +808,9 @@ transfer of  the output buffer  to host memory.   The timing and  weight related
 meta-data is added to the correlations to form the record which is then streamed
 out over a TCP connection to downstream processors.\\
 
-\noindent  \textbf  {Asynchronous  Host  to Device  Transfers  Overlapping  with
-  Compute:} PCIe bandwidth is a scarce  resource which we manage carefully. PCIe
+\subsubsection  {Asynchronous  Host  to Device  Transfers  Overlapping  with  Compute}
+% \noindent  \textbf  {Asynchronous  Host  to Device  Transfers  Overlapping  with  Compute:}
+ PCIe bandwidth is a scarce  resource which we manage carefully. PCIe
 transfers  to host  memory overlap  well with  computations, to  avoid GPU  idle
 times. In  addition, we avoid  simultaneous transfers  between the CPU  and GPUs
 that are connected through the same PCIe bus (through PCIe switches on board the
@@ -805,9 +831,8 @@ we use a model sky based multi-source self calibration approach, as described in
 The calibration  and imaging  is carried  out on a  cluster of  multicore server
 class machines, where each correlator output  subband is connected to a flagging
 and calibration  pipeline, as  shown in Fig.   \ref{fig:afaac_arch}. We  use the
-Eigen3 \citep{eigenweb} C++ template library  with its SIMD support to implement
-all  stages of  matrix processing  and linear  algebra in  general within  these
-pipelines.\\
+Eigen3 \citep{eigenweb} C++  template library to implement all  stages of matrix
+processing and linear algebra in general within these pipelines.\\
 
 \subsection{Calibration Pipeline} Each channelized subband stream coming out of the
 correlator  is  ingested  into  a  multi-threaded  calibration  pipeline  with  a
@@ -859,12 +884,12 @@ and temporal axis to eliminate outliers.\\
 \noindent   \textbf  {Imaging:}   The  multi-subband   integrated  and   gridded
 visibilities are Fourier Transformed to generate the final snapshot image. \\
 
-\noindent \textbf  {Beam model:} Finally, a beam model  determined via simulations
+\noindent \textbf {Beam model:} Finally, a beam model determined via simulations
 of  the AARTFAAC  antennas is  applied in  the image  plane to  correct for  the
-primary  beam response  of the  dipoles in  the image.  The flux  calibration is
+primary beam  response of  the dipoles  in the image.   The flux  calibration is
 carried out using  measurements of the calibrator sources  established by \citet
-{scaife2012broad}.  After  this stage,  the images  are sent  to an  image plane
-transient detection pipeline (TraP).
+{scaife2012broad}.  After  this stage,  the images  are sent  to TraP  (see next
+section).
 
 %\begin {itemize}
 % \item {Architecture, implementation choices, performance}
@@ -875,7 +900,7 @@ transient detection pipeline (TraP).
 % \item {Interface to TraP}
 %\end {itemize}
 \section {\label{sec:afaac_trap} Transient Search Methodology}
-The  Transients  Pipeline  (TraP,  \citep{swinbank2015lofar})  carries  out  the
+The  Transients  Pipeline  \citep[TraP;][]{swinbank2015lofar}  carries  out  the
 automated detection  of transients and  variable sources in AARTFAAC  images, in
 near  real-time.  It  is  a  software package  optimized  for  the detection  of
 transients in  radio images  while specifically dealing  with issues  related to
@@ -908,8 +933,9 @@ AARTFAAC  specific characteristics  on  the image  processing,  and the  overall
 latency  induced by  TraP operating  in a  streaming mode.  We discuss  these in
 greater detail below.\\
 
-\noindent  \textbf  {Handling of  AARTFAAC  Specific  Characteristics by  TraP:}
-AARTFAAC creates instantaneous, transit  mode (non-tracking) All-sky images, and
+% \noindent  \textbf  {Handling of  AARTFAAC  Specific  Characteristics by  TraP:}
+\subsection  {Handling of  AARTFAAC  Specific  Characteristics by  TraP}
+AARTFAAC creates instantaneous, transit  mode (non-tracking) all-sky images, and
 will be continuously monitoring the sky. The  very wide field of view results in
 a varying sensitivity  across an instantaneous image, which has  to be accounted
 for before  islands of  high SNR  pixels can be  decomposed into  sources.  TraP
@@ -952,7 +978,9 @@ Fig. \ref{fig:afaac_arch}  shows TraP as  the ultimate sink of  AARTFAAC images,
 which will ingest 4 streams of image timeseries. Each stream corresponds to an 8
 subband, 1 second integrated image timeseries.\\
 
-\noindent \textbf {Latency:}  TraP latency is contributed by  the source finder,
+\subsection {Latency}
+% \noindent \textbf {Latency:}
+TraP latency is contributed by  the source finder,
 and the  database operation. The major  operations of the source  finder are the
 RMS and background  map estimation, and fitting to detected  sources. The former
 scales quadratically  with the number  of pixels  in an individual  image plane,
@@ -1029,7 +1057,9 @@ squashers).  When at  least  $1$ out  of  $n$  correlators and  $1$  out of  $n$
 squashers have been spawned  it will initiate TraP in the  third stage. An email
 will be sent when an error occurs or when an observation successfully started.\\
 
-\noindent \textbf  {Monitoring Interface:} The control  system allows monitoring
+% \subsubsection  {Monitoring Interface}
+\noindent \textbf  {Monitoring Interface:}
+ The control  system allows monitoring
 the  various  subsystems at  fine  granularity,  making  it useful  to  localize
 problems  within  the system  by  examining  the  email reports.   For  monitoring
 data flow         on        a         hardware        level         we        use
@@ -1048,7 +1078,7 @@ the results section.
    \includegraphics[width=\textwidth]{Figs/A12uncal_A6cal/Slide1.png}
    \caption{(Left) An uncalibrated image from the AARTFAAC-12 system demonstrating the
      hardware data routing and correlator functioning. (Right) A calibrated image from the AARTFAAC-6 system, with a bandwidth of ~1.5MHz and 1second integration.}
-   \label{fig:afaac_uncal_12station}
+   \label{fig:afaac_snapshots}
  %\end {minipage}
  \end{figure*}
 
@@ -1073,15 +1103,14 @@ The AARTFAAC system is currently in place and operating with 6 LOFAR stations, a
 total  bandwidth  of  ~6.25  MHz,  with real-time  images  being  created  at  a
 1sec/192kHz  cadence. The  correlator has  been tested  to operate  at the  full
 specification of 12 stations and ~6.25 MHz bandwidth. The 12-station calibration
-sub-system is currently being commissioned. Fig. \ref{fig:afaac_uncal_12station}
-shows the  1-second/1 subband  uncalibrated image  from the  AARTFAAC monitoring
-interface webpage. The remaining results and  images are thus from the 6-station
-system.   Fig.   \ref{fig:afaac_cal_6station}  shows  the  amplitude  and  phase
-calibrated all  sky image from  AARTFAAC-6, while Fig. \ref{afaac_24hr}  shows a
-mosaic of the whole sky as seen  by AARTFAAC. The Galactic plane is indicated by
-the dashed line. The flux scale on both images is arbitrary. The latter has been
-created by  combining 24  hours of observations  taken at 1  second and  192 kHz
-integration.\\
+sub-system is currently being commissioned, Fig. \ref{fig:afaac_snapshots} shows
+an uncalibrated 12-station image on the  left.  The remaining results and images
+in this section are from  the 6-station system.  Fig.  \ref{fig:afaac_snapshots}
+shows the  amplitude and phase calibrated  all sky image from  AARTFAAC-6 on the
+right, while Fig.  \ref{fig:afaac_24hr} shows a  mosaic of the whole sky as seen
+by AARTFAAC. The Galactic plane is indicated  by the dashed line. The latter has
+been created by combining 24 hours of observations taken at 1 second and 192 kHz
+integration.  The flux scale on all images is arbitrary. \\
 
 % \section {\label{sec:discussion} System Performance and Scalability}
 \begin{wstable}[h]
@@ -1180,7 +1209,9 @@ TraP & 696 &  & Measured with 4 input subbands on non-production desktop.\\ \col
 %% are also computed independently.\\
 
 
-\noindent \textbf {System Performance:} The overall performance of the real-time
+% \noindent \textbf {System Performance:}
+\subsection {System Performance}
+ The overall performance of the real-time
 system  is quantified  by  the achieved  latency. Table  \ref{tab:afaac_latency}
 presents  the  measured  compute  time  for various  functional  blocks  of  the
 system. These  results have been  obtained for  the 6-station system,  since the
@@ -1218,7 +1249,9 @@ these operations scale linearly with the number of detected sources in an image,
 and thus  latencies on the  12-station images are  expected to be  only slightly
 more.\\
 
-\noindent  \textbf   {AARTFAAC  Scalability:}   The  AARTFAAC   All-Sky  monitor
+%\noindent  \textbf   {AARTFAAC  Scalability:}
+\subsection   {AARTFAAC  Scalability}
+   The  AARTFAAC   all-sky  monitor
 implementation  can be  scaled  up  along the  spatial  (number  of dipoles)  or
 spectral (processed subbands) dimensions. A  spectral scaling will ultimately be
 limited by the  ring network bandwidth to about 64  subbands ($\sim12.5 MHz$) of
