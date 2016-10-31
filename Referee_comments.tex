@@ -1,0 +1,129 @@
+\documentclass{article}
+\usepackage{natbib}
+\begin {document}
+\title  {Referee  comments}
+\maketitle
+
+\textbf  {Editor  1:}
+
+\textit{Given  the  similarity of  some  aspects  of  the system  to  previously
+  published FPGA/GPU  correlator work,  please also add  references to  e.g. the
+  CHIME, LEDA, \& PAPER experiment correlators.}\\
+
+A new paragraph has been added to Sec. 1: ``Telescopes being
+built for science  cases other than transient detection,  notably new generation
+high redshift  $\lambda21cm$ experiments,  can also  employ a  hierarchical data
+routing and  processing scheme similar to  ours.  The large number  of receiving
+elements necessary for high sensitivity  wide field observations have resulted in
+hybrid FPGA/GPU approaches to correlation  similar to ours.  Notable among these
+are  the  LEDA  \citep{kocz2015digital}, CHIME  \citep{bandura2014canadian}  and
+PAPER \citep{parsons2010precision} experiments.''\\
+
+\textbf {Reviewer 1:}
+\begin {enumerate}
+  
+\item  \textit{The  instrument  could  be better  motivated  by  a  quantitative
+  comparison  of  the   AARTFAAC  specs  with  (a)   expected  transient  source
+  populations (the authors mention the Swinbank et al. NCP transient, and FRBs),
+  and (b) areas  of the cadence-sensitivity-resolution phase  space that haven't
+  yet been probed. For example, the  authors could provide estimates of how many
+  transients  like the  Swinbank  et al.  event could  be  detected, along  with
+  estimates for  FRBs, emission from extrasolar  planets, the Jaeger et  al. VLA
+  transient, etc.}
+
+  The following  statement has  been added to  the introduction
+  section:
+
+  ''Among the  many sources  known and  speculated to be  emitting at  low radio
+  frequencies, AARTFAAC would  be particularly sensitive to  brighter (and hence
+  rarer) transients due  to its wide field of view  and continuous sky coverage.
+  Solar type  II and III  bursts, usually the  brightest transients in  the sky,
+  would be spatially resolved, allowing  their temporal evolution to be studied.
+  Jovian Decametric (DAM) bursts are expected to be another source of transients
+  bright enough  to be  regularly seen  by the AARTFAAC.   Detection of
+  Jovian     synchrotron     emission  would be    possible     in     deeper     images
+  \citep{girard2012jupiter,zarka2004fast}, allowing   the  tracking   of  their
+  temporal and spectral variability.
+
+  Transients of the  kind detected by \citep{stewart2016lofar},  with a duration
+  of a  few minutes and a  flux density at 60MHz  of 15-25 Jy would  be the most
+  intriguing  discovery from  the AARTFAAC.  Based on  their published  rates of
+  $\sim1.5x10^{-5}  deg^{-2}$, and  assuming a  cosmological population  of such
+  transients,  our  detection  rate  with  a  $3\sigma$  sensitivity  of  42  Jy
+  (\ref{tab:afaac_specs}) is expected to be about $7 sky^{-1}day^{-1}$.
+  
+\item \textit{More detail  on how AARTFAAC could benefit  LOFAR operations would
+  be appreciated (Page 2, paragraph 3).}
+
+  The introduction section has a  new paragraph: ``The AARTFAAC, being commensal
+  and operating in real-time, can also  be beneficial for LOFAR operations.  The
+  system  can  provide  instantaneous  feedback   on  a  number  of  operational
+  parameters  like the  health of  the system  at the  dipole level,  missing or
+  corrupt timeslices,  directional information about RFI  sources, monitoring of
+  RFI prone subbands, etc.  These can  be utilized to monitor and diagnose LOFAR
+  issues.  Observational parameters like the presence  of a flaring Sun, or high
+  ionospheric activity  can also be  instantaneously monitored.  if  provided as
+  metadata  with  LOFAR  observations,  these  could  ease  the  segregation  of
+  corrupted data stretches.''
+  
+  
+\item  \textit {Will  the  AARTFAAC team  be  investigating polarised  transient
+  emission,  which  may  be  important  in  overcoming  calibration  and  source
+  confusion limits?}
+
+  The current system can generate images from  all 4 cross and parallel hands in
+  real-time. However, since our current focus is more on transient detection, we
+  do not carry  out polarization calibration of the instrument  and analyse only
+  the total power images. We plan to  bring in calibrated polarized imaging in a
+  later version of the instrumentation.   Stokes-V images can be generated right
+  now,  and are  expected to  beat  source confusion  limits due  to being  very
+  sparsely populated, however, the current  system is limited to processing only
+  Stokes-I images.
+  
+
+\item   \textit   {Are  the   performance   measures   in   Table  1   for   the
+  highest-sensitivity part  of the primary  beam? Presumably the  sensitivity is
+  confusion limited, and hence varies according to sky position?}\\
+  
+  Yes, the measure is  from the zenith, which is the most  sensitive part of the
+  primary  beam.   The  array  is  confusion limited  after  about  30  secs  of
+  integration \citep{prasad2014real},  not at  the 1sec cadences  reported here.
+  The sky noise contributes more to the sensitivity variation than the confusion
+  noise. Sensitivity variation is now mentioned  in the footnote of table 1.  We
+  account for this noise variation in our analysis.
+  
+
+\item \textit {Some discussion of the motivation for searching for transients in
+  image space, rather than visibility space, would be good. Why is this the best
+  approach for AARTFAAC?}\\
+
+  This was  indirectly alluded to in  the introduction section, which  has now a
+  new paragraph  with the following  explanation: ``They typically have  a large
+  number  of receiving  elements for  high sensitivities  and low  instantaneous
+  sidelobes, resulting in high fidelity imaging from even snapshot observations.
+  Image  domain  transient searches  allow  spatial  discrimination of  spurious
+  sources of emission from sidelobes, and are inherently more robust against RFI
+  than  beam-forming, especially  for wide-field  observations.  Further,  short
+  cadence  transients like  FRBs are  expected  to be  scatter-broadened at  low
+  frequencies to timescales  comparable to snapshot imaging  cadences, making it
+  feasible to  detect their emission  in the  image domain.  Thus,  image domain
+  searches are very attractive for wide fieldtransient monitors.''
+
+\item  \textit {Does  the  6.25 MHz  band  have  to be  contiguous,  or can  the
+  sub-bands be spaced out over the LBA band?}\\
+
+  No, the 32  subbands can be independently chosen from  among the 512 available
+  subbands. This  selection is independent from  the selection used by  LOFAR. A
+  new  sentence has  been  added to  Sec.  3.2, paragraph  1:  ``This subset  of
+  subbands can  be distributed among the  available 512 subbands in  any manner,
+  from coverage  of contiguous subbands to  a sparse coverage across  the entire
+  analog bandwidth.''
+
+\item    \textit  {Page    1,   par.    2:   ``non-repeating''    $\rightarrow$
+  ``repeating''}\\Done.
+\end{enumerate}
+
+\bibliographystyle{unsrt}
+\bibliography{ref}
+
+\end{document}

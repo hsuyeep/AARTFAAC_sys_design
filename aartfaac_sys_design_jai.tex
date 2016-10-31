@@ -80,7 +80,7 @@ The serendipitous discovery of a new  class of radio transient termed Fast Radio
 Bursts  \citep[FRBs;][]{spitler2015fast, thornton2013population}  has galvanized
 interest in the field.  The detected  FRBs are characterized by large associated
 dispersion  measures,   high  brightness   and  short  timescales.    One  \cite
-{spitler2016repeating}  discovered source  has been  found to  be non-repeating.
+{spitler2016repeating}  discovered source  has been  found to  be repeating.
 Their unknown origins makes it difficult  to discover such sources in a targeted
 observation, with  only one possible  instance of a  multiwavelength association
 with an FRB \cite {keane2016host}. Thus, discoveries during blind searches along
@@ -124,6 +124,43 @@ other   notable    examples   being    the   Long   Wavelength    Array   (LWA),
      but  with  extremely  wide  fields   of  view  (typically  all  sky),  high
      availability, and autonomous calibration and imaging in near real time.
 
+\textbf  {They typically  have a  large number  of receiving  elements for  high
+  sensitivities  and low  instantaneous  sidelobes, resulting  in high  fidelity
+  imaging  from even  snapshot  observations.  Image  domain transient  searches
+  allow spatial discrimination  of spurious sources of  emission from sidelobes,
+  and are inherently  more robust against RFI than  beam-forming, especially for
+  wide-field  observations.  Further,  short  cadence transients  like FRBs  are
+  expected to be  scatter-broadened at low frequencies  to timescales comparable
+  to snapshot imaging  cadences, making it feasible to detect  their emission in
+  the image domain. Thus, image domain transient searches are very attractive for wide field transient monitors.}
+     
+\textbf  {Telescopes  being  built  for   science  cases  other  than  transient
+  detection, notably new generation high redshift $\lambda21cm$ experiments, can
+  also employ a hierarchical data routing and processing scheme similar to ours.
+  The  large number  of receiving  elements necessary  for high  sensitivity wide
+  field observations have resulted in  hybrid FPGA/GPU approaches to correlation
+  similar to  ours.  Notable among  these are the  LEDA \citep{kocz2015digital},
+  CHIME   \citep{bandura2014canadian}  and   PAPER  \citep{parsons2010precision}
+  experiments.}
+     
+\textbf {Among the many sources known and speculated to be emitting at low radio
+  frequencies, AARTFAAC would  be particularly sensitive to  brighter (and hence
+  rarer) transients due  to its wide field of view  and continuous sky coverage.
+  Solar type  II and III  bursts, usually the  brightest transients in  the sky,
+  would be spatially resolved, allowing  their temporal evolution to be studied.
+  Jovian Decametric (DAM) bursts are expected to be another source of transients
+  bright  enough to  be regularly  seen by  the AARTFAAC.   Detection of  Jovian
+  synchrotron    emission     would    be    possible    in     deeper    images
+  \citep{girard2012jupiter,zarka2004fast},  allowing   the  tracking   of  their
+  temporal and spectral variability.}
+
+\textbf{ Transients  of the  kind detected  by \citep{stewart2016lofar},  with a
+  duration of a few minutes and a flux density at 60MHz of 15-25 Jy would be the
+  most intriguing discovery from the AARTFAAC. Based on their published rates of
+  $\sim1.5x10^{-5}  deg^{-2}$, and  assuming a  cosmological population  of such
+  transients,  our  detection  rate  with  a  $3\sigma$  sensitivity  of  14  Jy
+  (\ref{tab:afaac_specs}) is expected to be about $7 sky^{-1}day^{-1}$.}
+       
 The AARTFAAC instrument also has secondary uses, besides its primary requirement
 of  generating reliable  triggers.  Due  to the  time resolved,  wide field  and
 continuous nature  of AARTFAAC  observations, its  secondary data  products like
@@ -137,6 +174,16 @@ will also be a  fundamental capability of phase 1 of  the Square Kilometer Array
 the  largest   aperture  array   implementation  for  low   frequency  transient
 monitoring. As such,  it provides a very realistic  test-bench for technological
 approaches to all aspects of this kind of telescope.
+
+\textbf {The AARTFAAC,  being commensal and operating in real-time,  can also be
+  beneficial  for  LOFAR  operations.   The  system  can  provide  instantaneous
+  feedback on a  number of operational parameters like the  health of the system
+  at the  dipole level, missing  or corrupt timeslices,  directional information
+  about  RFI sources,  monitoring  of RFI  prone subbands,  etc.   These can  be
+  utilized to monitor and diagnose  LOFAR issues.  Observational parameters like
+  the  presence of  a  flaring Sun,  or  high ionospheric  activity  can also  be
+  instantaneously monitored.   if provided as metadata  with LOFAR observations,
+  these could ease the segregation of corrupted data stretches.}
 
 The  wide field  of  views necessary  for  an instrument  like  AARTFAAC can  be
 achieved by sampling the sky with wide-field dipoles. This, however comes at the
@@ -354,7 +401,7 @@ Time resolution & 1 & sec.\\ \colrule
 
 \end{tabular}
 \begin{tablenotes}
-\item[a] Derived from AARTFAAC-6 measured sensitivity of 25 Jy.
+\item[a] Derived from AARTFAAC-6 measured sensitivity of 25 Jy. Sensitivity varies by LST and elevation of interest.
 %%\item[b] Sample table notes.
 \end{tablenotes}
 \label{tab:afaac_specs}
@@ -384,7 +431,9 @@ input. The output of  this filter bank is used for both  LOFAR and AARTFAAC. The
 filter  bank analyzes  the sampled  voltage  timeseries into  a complex  voltage
 spectrum  of 512  subbands. Thus,  the  entire analog  band of  the LBA  between
 10-90MHz  is available  for further  processing,  of which  AARTFAAC utilizes  a
-subset of about 6.25 MHz.
+subset of about  6.25 MHz.  \textbf {This subset of  subbands can be distributed
+  among the  available 512 subbands in  any manner, from coverage  of contiguous
+  subbands to a sparse coverage across the entire analog bandwidth}
 
 The output, for a set of 1024 real voltage samples, consists of a complex number
 per  subband,  with a  2s  complement  16-bit  representation  of the  real  and
@@ -423,7 +472,7 @@ carrying per dipole subbands used exclusively for AARTFAAC processing.
 
 The RSP firmware on  the FPGAs have been modified to  enable the transmission of
 the  AARTFAAC data.   The AARTFAAC  specific firmware  selects a  subset of  the
-available 512 subbands from all  antennas specifically and independent of LOFAR.
+available 512 subbands from all  antennas specifically and independent of LOFAR. \textbf {These subbands can be chosen arbitrarily to cover the digitised band.} 
 The available  ring network data  bandwidth forms the fundamental  limitation of
 the  AARTFAAC processed  bandwidth.  To  retrieve more  bandwidth, the  firmware
 accommodates a configuration in the number of bits used to represent the complex
